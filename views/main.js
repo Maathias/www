@@ -33,7 +33,7 @@ class Tools{
 	    	.replace(/'/g, "&#039;")
 	}
 
-	static argq(arg){ // join quotes in arg array
+	/*static argq(arg){ // join quotes in arg array
 		var v = 0;
 		var g = [];
 		for (var ar in arg) {
@@ -63,7 +63,7 @@ class Tools{
 			}
 		}
 		return g
-	}
+	}*/
 
 	static isDefined(...d){
 
@@ -109,7 +109,7 @@ class Tools{
 
  	}
 
-  	static makeID(n){ // generate random base 64 string
+  static makeID(n){ // generate random base 64 string
 		var out = "";
 		var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
@@ -133,7 +133,8 @@ class Tools{
 }
 
 class ToHtml{
-	static toTree(obj, mdepth){ // hmtl tree
+	static toTree(obj, mdepth){
+		// returns html (ul list) tree
 
 		var typeOf = function(o){
 			var t = typeof o;
@@ -165,7 +166,7 @@ class ToHtml{
 
 		}
 
-		var collapse = function(n){
+		var $collapse = function(n){
 			if(n){
 				return $("<span></span>")
 					.addClass("collapse")
@@ -183,7 +184,7 @@ class ToHtml{
 			}
 		}
 
-		var recur = function(obj, depth){
+		var $recur = function(obj, depth){
 
 			let m = Tools.isDefined(mdepth, Config.treeDepth, 4);
 			const maxd = m<=7 ? m : 7;	// max depth
@@ -191,7 +192,7 @@ class ToHtml{
 			const maxs = 150;	// max string length
 			const maxc = 2;		// level to collapse after
 
-			var list = $("<ul></ul>");
+			var $list = $("<ul></ul>");
 
 			var i = 0;
 			for(let key in obj){
@@ -208,7 +209,7 @@ class ToHtml{
 					case 'object':
 					case 'array':
 						if($.isEmptyObject(content)){ // is content epmty
-							list.append( // empty object
+							$list.append( // empty object
 									$("<li></li>")
 										.append( contentType(content, key) )
 										.append( ": " )
@@ -216,28 +217,28 @@ class ToHtml{
 								)
 						}else{ // content not empty
 							if(depth > maxd){ // is max depth reached
-								list.append( // function description (max depth reached)
+								$list.append( // function description (max depth reached)
 									$("<li></li>")
 										.append( contentType(content, key) )
 										.append( ": " )
 										.append( `<txpnk>${ Tools.isWhat(content) }</txpnk>` )
 								)
 							}else{ // max depth not reached
-								list.append( // continue recursion
+								$list.append( // continue recursion
 									$("<li></li>")
 										.append( contentType(content, key) )
 										.append( ": " )
 										.append( // collapse button
-											collapse( depth >= maxc )
+											$collapse( depth >= maxc )
 										)
-										.append( recur(content, depth+1) )
+										.append( $recur(content, depth+1) )
 								)
 							}
 						}
 						break;
 
 					case 'function':
-						list.append(
+						$list.append(
 							$("<li></li>")
 								.append( contentType(content, key) )
 								.append( ": " )
@@ -248,7 +249,7 @@ class ToHtml{
 						break;
 
 					default:
-						list.append(
+						$list.append(
 							$("<li></li>")
 								.append( contentType(content, key) )
 								.append( ": " )
@@ -261,7 +262,7 @@ class ToHtml{
 
 			if(i > maxn){
 
-				list.append(
+				$list.append(
 					$("<li></li>")
 						.append(
 							$("<txprp></txprp>")
@@ -272,33 +273,35 @@ class ToHtml{
 			}
 
 			if(depth > maxc){
-				list.hide()
+				$list.hide()
 			}
 
-			return list
+			return $list
 
 		}
 
-		if( typeOf(obj)!="array" && typeOf(obj)!="object" ) return $("<span></span>").append(contentType(obj)).append(": ").append(obj+"")
+		if( typeOf(obj)!="array" && typeOf(obj)!="object" )
+			return $("<span></span>").append(contentType(obj)).append(": ").append(obj+"")
 
-		var ascii = $("<ul></ul>")
+		var $ascii = $("<ul></ul>")
 			.addClass("ascii")
 			.append(
 				$("<li></li>")
 					.append( contentType(obj) )
 					.append(
-						collapse(false)
+						$collapse(false)
 					)
-					.append( recur(obj, 1) )
+					.append( $recur(obj, 1) )
 			)
 
-		return ascii;
+		return $ascii;
 
 	}
 
-	static toTable(content){ // return table from 2d array
+	static toTable(content){
+		// returns html table from 2d array
 
-		var table = $("<table></table>")
+		var $table = $("<table></table>")
 
 		for(let row of content){
 			let tr = $("<tr></tr>")
@@ -307,14 +310,15 @@ class ToHtml{
 					$("<td></td>").append( col+"" )
 				)
 			}
-			table.append( tr )
+			$table.append( tr )
 		}
 
-		return table
+		return $table
 
 	}
 
 	static toGraph(data, x, y){
+		// returns chart.js graph
 
 		var id = Tools.makeID(6);
 
@@ -370,10 +374,12 @@ class ToHtml{
 
 		return `<pre><code>${indexed}</code></pre>`*/
 	}
+
 }
 
-var ChangeDom = {
-	updateInfo: function updateInfo(res){	// refresh status informations
+class ChangeDom{
+	static updateInfo(res){
+		// refresh status informations
 
 		// var rp = JSON.parse(res);	// parse json
 
@@ -401,21 +407,22 @@ var ChangeDom = {
 		nl += '<li><txblu>Raspberry</txblu><ul><li><txred>I2C</txred><ul></ul></li><li><txred>Serial</txred><ul></ul></li></ul></li>';
 		$(".info10").html(nl);}
 		// update devices section
-	},
+	}
 
-	/*setstyle: function setstyle(name){ // set style theme
-		if(!name) var name = "";
+	static setStyle(){
+		/*setstyle: function setstyle(name){ // set style theme
+			if(!name) var name = "";
 
-		if(name != ""){
-			log("Style: "+name, "info");
-			Tools.setCookie("style", name);
-			$('head').append('<link rel="stylesheet" href="styles/'+name+'.css" type="text/css" />');
-		}else{
-			log("Style "+name+" doesn't exist, using default preset", "warning");
-			setstyle("default");
-		}
-	},*/
-
+			if(name != ""){
+				log("Style: "+name, "info");
+				Tools.setCookie("style", name);
+				$('head').append('<link rel="stylesheet" href="styles/'+name+'.css" type="text/css" />');
+			}else{
+				log("Style "+name+" doesn't exist, using default preset", "warning");
+				setstyle("default");
+			}
+		},*/
+	}
 
 }
 
@@ -696,38 +703,11 @@ function mesall(data, amount, con){ // parse mesenger chat information
 	return null;
 }
 
-
-function debugMode(bool){
-	bool = Tools.isDefined(bool, !debug);
-	debug = !debug;
-	if(bool){
-		$(".commands")
-			.on("click", ".command", function(){console.log($(this).data("com"))})
-			.on("mouseover", ".command", function(){
-				$(this).css("background", "#ffffff11");
-			})
-			.on("mouseleave", ".command", function(){
-				$(this).css("background", "initial");
-			});
-		$(".command").css("cursor", "alias");
-
-		return true;
-	}else{
-		$(".commands").off();
-		$(".command").css("cursor", "default")
-		$(".command").css("background", "initial");
-
-		return false;
-	}
-
-
-}
-
 class Elements{
-	constructor(wind){
+	constructor($wind){
 
-		if(typeof wind == "undefined"){
-			var wind = $("<div></div>")
+		if(typeof $wind == "undefined"){
+			var $wind = $("<div></div>")
 				.addClass("wind")
 				.append(
 					//<input type="file" id="jsonl" style="display: none" />
@@ -786,94 +766,96 @@ class Elements{
 								)
 						)
 				)
-			$("body").append(wind);
+			$("body").append($wind);
 		}
 
-		this.wind = wind;
-		this.commands = wind.children(".commands");
-		this.ud = wind.children(".commline").children(".ud")
-		this.commuser = wind.children(".commline").children(".ud").children(".comuser");
-		this.commpath = wind.children(".commline").children(".ud").children(".commpath");
-		this.commin = wind.children(".commline").children(".commin");
-		this.jsonl = wind.children(".jsonl");
+		this.$wind = $wind;
+		this.$commands = $wind.children(".commands");
+		this.$ud = $wind.children(".commline").children(".ud")
+		this.$commuser = $wind.children(".commline").children(".ud").children(".comuser");
+		this.$commpath = $wind.children(".commline").children(".ud").children(".commpath");
+		this.$commin = $wind.children(".commline").children(".commin");
+		this.$jsonl = $wind.children(".jsonl");
 
-		this.commin.on("blur", function(){
+		this.$commin.on("blur", function(){
 			if($(this).closest(".wind").data("con").scroll){
 				this.focus();
 			}
 		})
 
-		this.icons = wind.children(".commline").children(".icons");
+		var icons = $wind.children(".commline").children(".icons");
 
-		this.icons.trash = this.icons.children("i.icon-trash");
-		this.icons.trash.on("click", function(){
+		this.icons = {};
+
+		this.icons.$trash = icons.children("i.icon-trash");
+		this.icons.$trash.on("click", function(){
 			$(this).closest(".wind").data("con").clear();
 		})
 
-		this.icons.levelDown = this.icons.children("i.icon-level-down");
-		this.icons.levelDown.on("click", function(){
+		this.icons.$levelDown = icons.children("i.icon-level-down");
+		this.icons.$levelDown.on("click", function(){
 			$(this).closest(".wind").data("con").scrollBottom(true);
 		})
 
-		this.icons.volume = this.icons.children("i.icon-volume-up");
+		this.icons.$volume = icons.children("i.icon-volume-up");
 
-		this.icons.lock = this.icons.children("i.icon-lock-open");
-		this.icons.lock.change = function(){
-			var con = wind.data("con")
+		this.icons.$lock = icons.children("i.icon-lock-open");
+		this.icons.$lock.change = function(){
+			var con = $wind.data("con")
 			if(!con.scroll){
 				this.removeClass();
 				this.addClass("icon-lock-open");
 				con.scroll = true;
-				con.elements.commin.focus();
+				con.elements.$commin.focus();
 			}else{
 				this.removeClass();
 				this.addClass("icon-lock");
 				con.scroll = false;
 			}
 		}
-		this.icons.lock.on("click", function(){
-			$(this).closest(".wind").data("con").elements.icons.lock.change();
+		this.icons.$lock.on("click", function(){
+			$(this).closest(".wind").data("con").elements.icons.$lock.change();
 		});
 
-		this.icons.connection = this.icons.children("i.icon-unlink");
-		this.icons.connection.blink = function(){
+		this.icons.$connection = icons.children("i.icon-unlink");
+		this.icons.$connection.blink = function(){
 			this.addClass("txgrn glow");
 			setTimeout(function(icon){
 				icon.removeClass("txgrn glow");
 			}, 200, this);
 		}
-		this.icons.connection.on("click", function(){
+		this.icons.$connection.on("click", function(){
 			$(this).closest(".wind").data("con").executeCom("connection");
 		})
 
-		this.icons.lock.enable = function(){
+		this.icons.$lock.enable = function(){
 			this.removeClass();
 			this.addClass("icon-lock-closed");
 		}
-		this.icons.lock.disable = function(){
+		this.icons.$lock.disable = function(){
 			this.removeClass();
 			this.addClass("icon-lock");
 		}
 
-		this.icons.connection.enable = function(){
+		this.icons.$connection.enable = function(){
 			this.removeClass();
 			this.addClass("icon-link");
 		}
-		this.icons.connection.disable = function(){
+		this.icons.$connection.disable = function(){
 			this.removeClass();
 			this.addClass("icon-unlink");
 		}
 
-		this.commline = wind.children(".commline");
-		this.commline.enable = function(){
+		this.$commline = $wind.children(".commline");
+		this.$commline.enable = function(){
 			this.children(".commin").prop('disabled', false);
 			this.css("filter", "grayscale(0%)");
 		}
-		this.commline.disable = function(){
+		this.$commline.disable = function(){
 			this.children(".commin").prop('disabled', true);
 			this.css("filter", "grayscale(1000%)");
 		}
-		this.commuser.change = function(user, badge){
+		this.$commuser.change = function(user, badge){
 			this.html(user);
 			this.removeClass();
 			this.addClass(badge);
@@ -900,9 +882,9 @@ class Com{
 		this.c = data.c; // executed command (string)
 		this.cc = cc; // command with parameters (string)
 		this.arg = data.arg; // command arguments (array)
-		this.dir = con.elements.commpath.html(); // command directory (string)
+		this.dir = con.elements.$commpath.html(); // command directory (string)
 
-		this.elem = undefined; // Com element, (undefined | DOM)
+		this.$elem = undefined; // Com element, (undefined | DOM)
 		this.ud = undefined; // Com UserData (DOM)
 		this.sr = undefined // server response (DOM)
 		this.formatted = undefined; // formatted server response data (mixed)
@@ -920,7 +902,7 @@ class Com{
 
 	append(){
 
-		this.elem = $("<div></div>")
+		this.$elem = $("<div></div>")
 			.prop("id", this.id)
 			.addClass("command")
 			.append(
@@ -939,7 +921,7 @@ class Com{
 					.append(":")
 					.append(
 						$("<txblu></txblu>")
-						.append(this.con.elements.commpath.html())
+						.append(this.con.elements.$commpath.html())
 					)
 					.append(" $ ")
 					.append(
@@ -949,7 +931,7 @@ class Com{
 			)
 			.data("com", this);
 
-		this.con.elements.commands.append(this.elem);
+		this.con.elements.$commands.append(this.$elem);
 
 	}
 
@@ -986,7 +968,7 @@ class Com{
 				// this.con.commandAppend(data.data);	// append response to command list
 				break;
 			case 5: // cd response, change dir
-				$(this.con.elements.commpath).html(data.data);	// append response to command list
+				$(this.con.elements.$commpath).html(data.data);	// append response to command list
 				break;
 			case 6: // log response
 				this.log(this.res.data, this.res.arg);
@@ -1081,7 +1063,7 @@ class Com{
 						break;
 
 					case "load":
-						this.con.elements.jsonl.click();
+						this.con.elements.$jsonl.click();
 						this.insertResponse();
 						break;
 
@@ -1120,7 +1102,7 @@ class Com{
 	}
 
 	remove(){
-		this.elem.remove();
+		this.$elem.remove();
 	}
 
 	stopLoading(){
@@ -1134,7 +1116,7 @@ class Com{
 
 	addForm(obj, type){
 		this.con.scrollBottom(); // scroll to EOP
-		this.con.elements.commline.disable(); // disable commline
+		this.con.elements.$commline.disable(); // disable commline
 
 		var form = $("<form></form>") // create form Node
 
@@ -1151,14 +1133,14 @@ class Com{
 				)
 		}
 
-		this.elem.append(form); // add form to Com elem
-		this.elem.find("input")[0].focus(); // focus on first form input
+		this.$elem.append(form); // add form to Com elem
+		this.$elem.find("input")[0].focus(); // focus on first form input
 
 	}
 
 	sendForm(){
 
-			var form = this.elem.find("form"); // find Com form
+			var form = this.$elem.find("form"); // find Com form
 			var obj = {}; // create response object
 
 			this.removeForm(); // disable form
@@ -1175,11 +1157,11 @@ class Com{
 
 	removeForm(){
 
-		this.elem.find("form").children("label").each(function(index){ // form label of Com
+		this.$elem.find("form").children("label").each(function(index){ // form label of Com
 			$(this).children("input").prop('readonly', true); // set each input to 'readonly'
 		});
 
-		this.con.elements.commline.enable(); // enable commline
+		this.con.elements.$commline.enable(); // enable commline
 
 	}
 
@@ -1196,7 +1178,7 @@ class Com{
 			.addClass("sr")
 			.hide()
 
-		this.elem // append response data to Com element
+		this.$elem // append response data to Com element
 			.append(this.sr)
 
 
@@ -1235,11 +1217,11 @@ class Com{
 
 class Con{
 
-	constructor(wind){
+	constructor($wind){
 
 		this.id = Tools.makeID(6)
 		this.socket = undefined;
-		this.elements = new Elements(wind);
+		this.elements = new Elements($wind);
 
 		this.lastc = [""];	// last command list
 
@@ -1289,7 +1271,7 @@ class Con{
 			token: Tools.getCookie("token")
 		}
 
-		$(wind).ready(this.ready());
+		$($wind).ready(this.ready());
 	}
 
 	set uAuth(val){
@@ -1320,7 +1302,7 @@ class Con{
 		this.udata = udata;
 		this.uAuth = true;
 		con.log("Auth data received", "ok", 2);
-		this.elements.commuser.change(this.udata.login, this.udata.badge);
+		this.elements.$commuser.change(this.udata.login, this.udata.badge);
 		if(!this.fAuth) this.firstAuth()
 
 	}
@@ -1370,14 +1352,14 @@ class Con{
 			com.remove();
 		}
 		this.log(`Clearing commands div`, "info", 2);
-		this.elements.commands.empty();
+		this.elements.$commands.empty();
 
 	}
 
 	executeCom(val){
 
 		this.log(`Force Com execute: ${val}`, "info", 2);
-		this.elements.commin.val(val);
+		this.elements.$commin.val(val);
 		this.commandlineParse();
 
 	}
@@ -1410,7 +1392,7 @@ class Con{
 			.append(data)
 
 		if(this instanceof Con){
-			var lastlog = this.elements.commands.children().last();
+			var lastlog = this.elements.$commands.children().last();
 			if(lastlog.text() == out.text()){
 				let tx = lastlog.children('tx')
 
@@ -1425,7 +1407,7 @@ class Con{
 
 				return
 			}
-			this.elements.commands.append( out );
+			this.elements.$commands.append( out );
 			this.scrollBottom(false)
 		}else if(this instanceof Com){
 			this.elem.append( out )
@@ -1435,10 +1417,10 @@ class Con{
 
 	commandlineParse(){ // command send event
 
-		if(this.elements.commin.is(":hidden")) return;	// if commandline is blocked (hidden), stop executing
+		if(this.elements.$commin.is(":hidden")) return;	// if commandline is blocked (hidden), stop executing
 
-		var c = this.elements.commin.val();	// get command query
-		this.elements.commin.val("");	// clear commandline input
+		var c = this.elements.$commin.val();	// get command query
+		this.elements.$commin.val("");	// clear commandline input
 
 		if(c=="") return;
 
@@ -1483,7 +1465,7 @@ class Con{
 
 	getScroll(){ // get scroll distance to bottom
 
-		var s = this.elements.wind.scrollTop()-(this.elements.wind.prop('scrollHeight')-this.elements.wind.outerHeight());
+		var s = this.elements.$wind.scrollTop()-(this.elements.$wind.prop('scrollHeight')-this.elements.$wind.outerHeight());
 		if(s>=0)s=0;
 		else s = s*-1;
 		return s
@@ -1494,8 +1476,8 @@ class Con{
 		let force = Tools.isDefined(f, false);
 		if(force) return;
 
-		let a = this.elements.commands.children();
-		let b = this.elements.commands.children().children();
+		let a = this.elements.$commands.children();
+		let b = this.elements.$commands.children().children();
 
 		var to = 0;
 		for(let index of a)
@@ -1503,13 +1485,13 @@ class Con{
 		for(let index of b)
 			to += index.scrollHeight
 
-		this.elements.commands.stop().animate({scrollTop: to}, 200, 'swing', function(){});
+		this.elements.$commands.stop().animate({scrollTop: to}, 200, 'swing', function(){});
 
 	}
 
 	updateInputWidth(){
-		var w = this.elements.ud.width()+20;
-		this.elements.commin.css({ 'width': `calc(100% - ${w}px)` });
+		var w = this.elements.$ud.width()+20;
+		this.elements.$commin.css({ 'width': `calc(100% - ${w}px)` });
 		return w;
 	}
 
@@ -1519,9 +1501,9 @@ class Con{
 		// else if(key==40)
 		// 	this.elements.commin.val(this.history.down);
 
-		this.elements.commin.val( key==38 ? this.history.up : (key==40?this.history.down:"") );
+		this.elements.$commin.val( key==38 ? this.history.up : (key==40?this.history.down:"") );
 
-		this.elements.commin.focus();
+		this.elements.$commin.focus();
 	}
 
 	// lastCommandUp(){
@@ -1580,8 +1562,8 @@ class Con{
 
 	ready(){
 
-		$(this.elements.wind).prop("id", this.id);
-		$(this.elements.wind).data("con", this);
+		$(this.elements.$wind).prop("id", this.id);
+		$(this.elements.$wind).data("con", this);
 
 		this.socket = io('/');
 		this.socket.originalOn = this.socket.on;
@@ -1597,7 +1579,7 @@ class Con{
 		this.socket.on("disconnect", this, function(data, con){
 
 			con.log(`Disconnected from server: ${data}`, "warning");
-			con.elements.icons.connection.disable();
+			con.elements.icons.$connection.disable();
 			con.uAuth = false
 
 		})
@@ -1610,21 +1592,21 @@ class Con{
 		this.socket.on('connect', this, function(data, con){
 
 			con.log("Conected to the server", "ok");
-			con.elements.icons.connection.enable();
+			con.elements.icons.$connection.enable();
 			con.tryAuth();
 
 		});
 
 		this.socket.on("dynamic", this, function(data, con){
 
-			con.elements.icons.connection.blink();
+			con.elements.icons.$connection.blink();
 			console.log(data)
 			// /ChangeDom.updateInfo(data);
 		})
 
 		this.socket.on("broadcast", this, function(data, con){
 
-			con.elements.icons.connection.blink();
+			con.elements.icons.$connection.blink();
 			con.log(data.data, "message");
 			con.m = data.frm;
 			con.scrollBottom(true);
@@ -1635,23 +1617,23 @@ class Con{
 
 		this.socket.on("exec", this, function(data, con){
 
-			con.elements.icons.connection.blink();
+			con.elements.icons.$connection.blink();
 			$("head").append("<script>"+data.data+"</script>");
 		})
 
 		this.socket.on('auth', this, function(res, con){
 
-			con.elements.icons.connection.blink();
+			con.elements.icons.$connection.blink();
 			con.auth(res);
 		});
 
 		this.socket.on('com', this, function(res, con){
 
-			con.elements.icons.connection.blink();
+			con.elements.icons.$connection.blink();
 			con.receive(res);
 		});
 
-		this.elements.commline.on("keydown", "input", function(e) {
+		this.elements.$commline.on("keydown", "input", function(e) {
 
 			var con = $(this).closest(".wind").data("con");
 
@@ -1666,13 +1648,13 @@ class Con{
 				case 40: con.commandHistory(e.which); e.preventDefault(); // last command down
 				break;
 
-				case 27: con.elements.commin.val("") // clear input
+				case 27: con.elements.$commin.val("") // clear input
 				break;
 			}
 
 		});
 
-		this.elements.wind.on("click", ".collapse", function(e){
+		this.elements.$wind.on("click", ".collapse", function(e){
 
 			var collapse = $(this);
 
@@ -1687,18 +1669,18 @@ class Con{
 
 		})
 
-		this.elements.wind.on("keydown", function(e){
+		this.elements.$wind.on("keydown", function(e){
 
 			var con = $(this).data("con");
 
 			switch(e.which){
-				case 13: con.elements.commin.focus(); // focus on input
+				case 13: con.elements.$commin.focus(); // focus on input
 				break;
 			}
 
 		})
 
-		this.elements.commands.on("keydown", "form", function(e){
+		this.elements.$commands.on("keydown", "form", function(e){
 
 			var com = $(this).closest(".command").data("com");
 
@@ -1711,7 +1693,7 @@ class Con{
 			}
 		});
 
-		this.elements.wind.on("click", "a", function(e){
+		this.elements.$wind.on("click", "a", function(e){
 			var a = $(this);
 			var href = a.prop("href");
 			href = href.slice(href.indexOf("#"));
@@ -1722,7 +1704,7 @@ class Con{
 			}
 		})
 
-		this.elements.jsonl[0].addEventListener('change', this.readJson, false);
+		this.elements.$jsonl[0].addEventListener('change', this.readJson, false);
 
 		if(typeof Tools.getCookie("cookies") == "undefined"){
 			Tools.setCookie("cookies", "1");
