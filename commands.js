@@ -2,6 +2,9 @@ const PERM_FULL = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 const PERM_ROOT = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const PERM_NULL = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+const STAGE_F = "functional"
+const STAGE_D = "development"
+
 module.exports = {
 	help: {
 		f: (response, db) => {
@@ -48,7 +51,7 @@ module.exports = {
 		args: ["|command|"],
 		man: "user manual",
 		permissions: PERM_FULL,
-		stage: "functional"
+		stage: STAGE_F
 
 	},
 
@@ -74,8 +77,8 @@ module.exports = {
 		desc: "Eval-server. Executes js code on server",
 		args: ["[javascript]"],
 		man: "user manual",
-		permissions: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		stage: "functional"
+		permissions: PERM_ROOT,
+		stage: STAGE_F
 
 	},
 
@@ -95,8 +98,8 @@ module.exports = {
 		desc: "Displays contact info",
 		args: [],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "functional"
+		permissions: PERM_FULL,
+		stage: STAGE_F
 
 	},
 
@@ -134,8 +137,8 @@ module.exports = {
 		desc: "Executes linus commands (on root)",
 		args: ["[linux syntax]"],
 		man: "user manual",
-		permissions: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		stage: "functional"
+		permissions: PERM_ROOT,
+		stage: STAGE_F
 
 	},
 
@@ -149,8 +152,8 @@ module.exports = {
 		desc: "tests internet connection",
 		args: [],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "functional"
+		permissions: PERM_FULL,
+		stage: STAGE_F
 
 	},
 
@@ -169,8 +172,8 @@ module.exports = {
 		desc: "Displays current OS stats",
 		args: [],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "functional"
+		permissions: PERM_FULL,
+		stage: STAGE_F
 
 	},
 
@@ -190,8 +193,8 @@ module.exports = {
 		desc: "Displys current physical stats",
 		args: [],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "functional"
+		permissions: PERM_FULL,
+		stage: STAGE_F
 
 	},
 
@@ -206,7 +209,7 @@ module.exports = {
 		args: [],
 		man: "user manual",
 		permissions: [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-		stage: "functional"
+		stage: STAGE_F
 
 	},
 
@@ -227,8 +230,8 @@ module.exports = {
 		desc: "Displays current socket connection data",
 		args: [],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "functional"
+		permissions: PERM_FULL,
+		stage: STAGE_F
 
 	},
 
@@ -309,8 +312,8 @@ module.exports = {
 		desc: "Log in to an account",
 		args: ["[object Object]"],
 		man: "user manual",
-		permissions: new Array(10).fill(1),
-		stage: "development"
+		permissions: PERM_FULL,
+		stage: STAGE_D
 
 	},
 
@@ -423,66 +426,11 @@ if((typeof(db.users[arg[0]])!="undefined")||(arg[0]=="guest")){ // check if 'use
 break;
 //############################################################################################################################
 
-case "showdb":
-response.insert({
-	data: db,
-	flag: 9
-});	response.send();
-
 break;
 //############################################################################################################################
-case "do":
-response.addTime("do.begin");
-out = cmd.get(response.req.arg.join(" "), function(err, data, stderr){
-	response.addTime("do.end");
-	if(stderr){
-		response.insert({
-			data: stderr,
-			flag: 6,
-			arg: "error"
-		});
-	}else if(err){
-		response.insert({
-			data: err,
-			flag: 6,
-			arg: "error"
-		});
-	}else{
-		response.insert({
-			data: data,
-			flag: response.req.arg[0]=="cat"?11:0
-		});
-	}
-
-	response.send();
-});
-setTimeout(function(out){
-	response.addTime("do.kill");
-	cmd.run(`kill ${out.pid}`)
-}, 15000, out)
-break;
 
 //############################################################################################################################
-case "evals":
 
-try{
-	var e = eval(response.req.arg.join(" "));
-	response.insert({
-		data: e,
-		flag: 9
-	});
-}catch(error){
-	console.log(error);
-	response.insert({
-		data: error.message,
-		flag: 6,
-		arg: "error"
-	});
-}
-
-response.send();
-
-break;
 //############################################################################################################################
 
 case "online":
@@ -509,31 +457,6 @@ coms({
 break;
 //############################################################################################################################
 
-case "me":
-if(arg[0]=="verify"){
-	coms({
-		data: socket.udata,
-		arg: [],
-		flag: 8,
-		id: id
-	}, socket);
-}else//{
-
-response.insert({
-	data: socket.id,
-	flag: 0
-})
-response.send();
-
-// }
-// coms({
-// 	data: socket.id.slice(0, 6),
-// 	arg: [],
-// 	flag: 0,
-// 	id: id
-// }, socket);
-
-break;
 //############################################################################################################################
 
 case "cd":
@@ -644,19 +567,7 @@ if((typeof(db.users[arg[0]])!="undefined")||(arg[0]=="guest")){ // check if 'use
 break;
 //############################################################################################################################
 
-case "logs":
-cmd.get('ls logs',
-	function(err, data, stderr){
-		coms({
-			data: data,
-			arg: [],
-			flag: 0,
-			id: id
-		}, socket);
-	}
-);
 
-break;
 //############################################################################################################################
 // FIXME: chart
 case "chart":
