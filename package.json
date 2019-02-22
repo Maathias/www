@@ -19,6 +19,8 @@
     "bcrypt": "^3.0.4",
     "chalk": "^2.4.2",
     "cookie-parser": "^1.4.4",
+    "dotenv": "^6.2.0",
+    "ejs": "^2.6.1",
     "express": "^4.16.4",
     "node-cmd": "^3.0.0",
     "node-gzip": "^1.1.2",
