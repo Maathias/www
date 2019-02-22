@@ -1,4 +1,5 @@
 // dependencies
+require('dotenv').config()
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -19,8 +20,8 @@ const stdin = process.openStdin();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'mathias.ddns.net@gmail.com',
-    pass: '/?"hhc`VS7}@_?y}'
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
   }
 });
 
