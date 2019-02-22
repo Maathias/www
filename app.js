@@ -27,9 +27,9 @@ const transporter = nodemailer.createTransport({
 
 // ssl credentials
 const credentials = {
-	key: fs.readFileSync('/etc/letsencrypt/live/mathias.ddns.net/privkey.pem', 'utf8'),
-	cert: fs.readFileSync('/etc/letsencrypt/live/mathias.ddns.net/cert.pem', 'utf8'),
-	ca: fs.readFileSync('/etc/letsencrypt/live/mathias.ddns.net/chain.pem', 'utf8')
+	key: fs.readFileSync(process.env.CERT_KEY, 'utf8'),
+	cert: fs.readFileSync(process.env.CERT_CRT, 'utf8'),
+	ca: fs.readFileSync(process.env.CERT_CA, 'utf8')
 };
 
 class DataBase{
@@ -124,11 +124,7 @@ class DataBase{
 							response.insert({data: `User manual for ${c} not found`, flag: 6, arg: "error"}).send()
 						}
 					}else{ // commands list
-						response.insert({data: /*Tra.multiLine([
-							"<txcya>|optional arg|</txcya>, <txgrn>[necessary arg]</txgrn>, 'description'",
-							"Currently avaible commands:",
-							""
-						],*/
+						response.insert({data:
 							(function(commands, response){
 								var out = []
 								for(let com in commands){
@@ -2255,7 +2251,7 @@ app
 				path: req.path,
 				ip: req.ip
 			});
-	    });
+		});
 		next()
 	});
 
@@ -2277,7 +2273,7 @@ stdin.addListener("data", function(d) {
 	}
 });
 
-process.chdir("/home/mathias/node")
+// process.chdir("/home/mathias/node")
 
 // load user database from db.json and start listening
 fs.readFile('db.json', function (err, data){
@@ -2303,18 +2299,18 @@ fs.readFile('db.json', function (err, data){
 		}
 
 		// http standard server
-		httpServer.listen(80, function (){
+		httpServer.listen(provess.env.PORT_MAIN, function (){
 			Exe.log({
 				action: "info",
-				data: "Server listening on port 80"
+				data: `Server listening on port ${provess.env.PORT_MAIN}`
 			}, 1);
 		});
 
 		// https secure server
-		httpsServer.listen(443, function (){
+		httpsServer.listen(provess.env.PORT_SSL, function (){
 			Exe.log({
   			  action: "info",
-  			  data: "Server listening on port 443"
+  			  data: `Server listening on port ${provess.env.PORT_SSL}`
 		  }, 1);
 		});
 
