@@ -1,0 +1,17 @@
+txgrn			{color: #f4cc53;}	/* Green highlight */
+txblu, .txblu	{color: #f4cc53;}	/* Blue highlight */
+txcya, .txcya	{color: #f4cc53;}	/* Cyan highlight */
+txyel			{color: #f4cc53;}	/* Yellow highlight */
+txorn			{color: #f4cc53;}	/* Orange highlight */
+txred			{color: #f4cc53;}	/* Red highlight */
+txpnk			{color: #f4cc53;}	/* Pink highlight */
+txdrk			{color: #f4cc53;}	/* Dark highlight */
+txbrt			{color: #f4cc53;}	/* Bright highlight */
+
+#wind{
+	background-image: url("../img/fancy-cushion.png"); /* Background */
+}
+
+input,textarea,#wind{
+	color: #fff;	/* Tex color */
+}

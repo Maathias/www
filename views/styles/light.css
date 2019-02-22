@@ -1,0 +1,17 @@
+txgrn, .txgrn	{color: #00b700;}	/* default: #55FF55 */
+txblu, .txblu	{color: #0d6fde;}	/* default: #3d87db */
+txcya, .txcya	{color: #00cebc;}	/* default: #3ddbce */
+txyel, .txyel	{color: #ead000;}	/* default: #F4E253 */
+txorn, .txorn	{color: #f49652;}	/* default: #f49652 */
+txred, .txred	{color: #e00706;}	/* default: #db3e3d */
+txpnk, .txpnk	{color: #db3dce;}	/* default: #db3dce */
+txdrk, .txdrk	{color: #595959;}	/* default: #595959 */
+txbrt, .txbrt	{color: #fafafa;}	/* default: #fafafa */
+
+#wind{
+	background-image: url("../img/3.png"); /* Background */
+}
+
+input,textarea,#wind{
+	color: #000;	/* Tex color */
+}

@@ -1,0 +1,4 @@
+{
+  "verbose": true,
+  "ignore": ["main.js", "logs", "db.json"]
+}

@@ -1,0 +1,19 @@
+txgrn			{color: #55FF55;}
+txblu, .txblu	{color: #3d87db;}
+txcya, .txcya	{color: #3ddbce;}
+txyel			{color: #F4E253;}
+txorn			{color: #f49652;}
+txred			{color: #db3e3d;}
+txpnk			{color: #db3dce;}
+txdrk			{color: #595959;}
+txbrt			{color: #fafafa;}
+txyel			{color: #F4E253;}
+
+#wind{
+	background-image: url("../img/11.png");
+	color: #fff;
+}
+
+input,textarea{
+	color: #fff;
+}

@@ -1,0 +1,225 @@
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(ubuntu-mono.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+body{
+	height: 100vh;
+	background-color: #272626;
+	font-size: 14px;
+    margin: 0px;
+	font-family: Ubuntu Mono;
+}
+
+/* text inputs */
+input,textarea{
+	color: white;
+	font-family: Ubuntu Mono;
+	font-size: 14px;
+}
+
+/* highlight colors */
+txgrn, .txgrn	{color: #55FF55;}
+txdbl, .txdbl	{color: #2839E1;}
+txblu, .txblu	{color: #00B2FF;}
+txcya, .txcya	{color: #00FFFB;}
+txyel, .txyel	{color: #F4E253;}
+txorn, .txorn	{color: #f49652;}
+txred, .txred	{color: #f54241;}
+txdrd, .txdrd	{color: #920000;}
+txpnk, .txpnk	{color: #db3dce;}
+txdrk, .txdrk	{color: #595959;}
+txbrt, .txbrt	{color: #fafafa;}
+txyel, .txyel	{color: #F4E253;}
+txprp, .txprp	{color: #AE00FF;}
+
+/* main window */
+.wind{
+	background-color: #05070a;
+	position: relative;
+	max-width: 100vw;
+	max-height: 100vh;
+
+	height: 100vh;
+	width: 100vw;
+	float: left;
+	padding: 0px 15px;
+	color: white;
+	/* font-family: Ubuntu Mono; */
+	overflow-y: hidden;
+	overflow-x: hidden;
+	box-sizing: border-box;
+}
+
+code{
+	white-space: pre-wrap;
+	position: relative;
+	z-index: 2;
+}
+
+code > .hljs-newline::before{
+    content: attr(data-int);
+    margin-right: 5px;
+    border-right: solid white 1px;
+    background: #feeeee22;
+    padding: 2px 4px;
+}
+
+code>span:nth-child(even):after {
+    /* content: " "; */
+    position: absolute;
+    left: 10px;
+    right: 0px;
+    background: #00000022;
+    z-index: -1;
+}
+
+/* remove scrollbar */
+.wind::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.commands::-webkit-scrollbar
+{ width: 0 !important }
+
+/* command input element */
+.commin, input{
+	border: none;
+	background: transparent;
+	outline: none;
+}
+
+.comdata{
+	/* position: absolute; */
+	/* right: 0px; */
+	/* padding: 0px 15px; */
+	font-size: 10px;
+}
+
+.duplicate>tx::after {
+    content: 'x' attr(data-duplicate);
+    float: left;
+    margin-right: 5px;
+	font-weight: bold;
+}
+
+/* commandline row */
+.commline{
+	position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+	z-index: 100;
+    width: auto;
+    padding: 10px 15px;
+    background: rgba(0,0,0,0.6);
+}
+
+label{
+	position: relative;
+}
+
+label > input[type=checkbox]{
+	position: absolute;
+    top: 0;
+    height: 1rem;
+    width: 1rem;
+    background-color: #eee;
+    margin: 0px;
+}
+
+.icons{
+	position: absolute;
+	right: 15px;
+	margin-top: 1px;
+	user-select: none;
+}
+
+.icons > i{
+	cursor: pointer;
+}
+
+table{
+	border-spacing: 0px 3px;
+}
+
+.command > .ud:after{
+	content: attr(loading);
+	margin-left: 5px;
+}
+
+/* command output element */
+.commands{
+	line-height: 1.28;
+	padding: 25px 0px;
+	padding-bottom: 40px;
+	overflow-y: scroll;
+	max-height: 100%;
+	box-sizing: border-box;
+}
+
+::selection,
+::-moz-selection{
+
+}
+
+.frosted::before {
+    filter: blur(10px);
+}
+
+.collapse{
+	position: relative;
+	left: 1px;
+    top: 1px;
+	cursor: pointer;
+}
+
+.glow{
+	text-shadow: 0px 0px 13px;
+}
+
+/* command output subelement */
+.command{
+	white-space: pre-wrap;
+	margin: 10px 0px;
+}
+
+.sr::after{
+	position: absolute;
+	right: 5px;
+	/* content: attr(stat); */
+	display: none;
+}
+
+.command:hover>.sr::after{
+	position: absolute;
+	right: 5px;
+	display: inherit;
+}
+
+/* command output subelement */
+.inline{
+	white-space: pre-wrap;
+	margin: 0px;
+}
+
+td{
+	padding: 0px 10px 0px 0px;
+}
+
+
+/* LINKS */
+a{
+	color: white;
+	text-decoration: underline;
+}
+a:hover{
+	color: #666;
+}
+a:visited{
+	text-decoration: none;
+}
+a:active{
+	color: #333;
+}

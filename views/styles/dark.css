@@ -1,0 +1,17 @@
+txgrn			{color: #55FF55;}	/* Green highlight */
+txblu, .txblu	{color: #3d87db;}	/* Blue highlight */
+txcya, .txcya	{color: #3ddbce;}	/* Cyan highlight */
+txyel			{color: #F4E253;}	/* Yellow highlight */
+txorn			{color: #f49652;}	/* Orange highlight */
+txred			{color: #db3e3d;}	/* Red highlight */
+txpnk			{color: #db3dce;}	/* Pink highlight */
+txdrk			{color: #595959;}	/* Dark highlight */
+txbrt			{color: #fafafa;}	/* Bright highlight */
+
+#wind{
+	background-image: url("../img/country-quilt-dark.png"); /* Background */
+}
+
+input,textarea,#wind{
+	color: #fff;	/* Tex color */
+}

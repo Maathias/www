@@ -1,0 +1,28 @@
+{
+  "name": "smart-home",
+  "version": "1.0.0",
+  "description": "smart-home server",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node"
+  ],
+  "author": "Mateusz Pstrucha",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Maathias/smart-home.git"
+  },
+  "dependencies": {
+    "bcrypt": "^3.0.4",
+    "chalk": "^2.4.2",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.16.4",
+    "node-cmd": "^3.0.0",
+    "node-gzip": "^1.1.2",
+    "nodemailer": "^5.1.1",
+    "socket.io": "^2.2.0"
+  }
+}
