@@ -710,7 +710,6 @@ class Elements{
 			var $wind = $("<div></div>")
 				.addClass("wind")
 				.append(
-					//<input type="file" id="jsonl" style="display: none" />
 					$("<input>")
 						.addClass("jsonl")
 						.prop("type", "file")
@@ -861,7 +860,9 @@ class Elements{
 			this.addClass(badge);
 			this.closest(".wind").data("con").updateInputWidth()
 		}
+
 	}
+
 }
 
 class Request{
@@ -872,41 +873,43 @@ class Request{
 		this.id = com.id;
 		this.con = com.con.id;
 		this.udata = com.con.udata;
+
 	}
+
 }
 
 class Com{
 	constructor(cc, data, con){
-		this.con = Tools.isDefined(con, Config.cons[0]); // Con object (if not specified, use first one)
-		this.id = Tools.makeID(15); // 10-char base64 ID
-		this.c = data.c; // executed command (string)
-		this.cc = cc; // command with parameters (string)
-		this.arg = data.arg; // command arguments (array)
-		this.dir = con.elements.$commpath.html(); // command directory (string)
+		this.con = con; // parent Con object
+		this.id = Tools.makeID(15); // base64 ID
 
-		this.$elem = undefined; // Com element, (undefined | DOM)
-		this.ud = undefined; // Com UserData (DOM)
-		this.sr = undefined // server response (DOM)
+		this.cc = cc; // full command from input (string)
+		this.c = data.c; // executed command (string)
+		this.arg = data.arg; // command arguments (array)
+		this.dir = con.elements.$commpath.html(); // Con working directory (string)
+
+		this.$elem = undefined; // Com element
+		this.$ud = undefined; // Com UserData
+		this.$sr = undefined // server response
 		this.formatted = undefined; // formatted server response data (mixed)
 		this.stack = Tools.getStackTrace(); // current stack trace (array)
 
 		this.timer = undefined;
 		this.time = performance.now();
-		this.extra = [];
 
-		this.res = undefined;
-		this.req = undefined;
+		this.req = undefined; // request data
+		this.res = undefined; // server response data
 
-		this.log = this.con.log
+		this.log = this.con.log // log method
 	}
 
+	// append Com object to Con.commands
 	append(){
-
 		this.$elem = $("<div></div>")
 			.prop("id", this.id)
 			.addClass("command")
 			.append(
-				this.ud = $("<span></span>")
+				this.$ud = $("<span></span>")
 					.addClass("ud")
 					.append(
 						$("<span></span>")
@@ -1219,59 +1222,68 @@ class Con{
 
 	constructor($wind){
 
-		this.id = Tools.makeID(6)
-		this.socket = undefined;
-		this.elements = new Elements($wind);
+		this.id = Tools.makeID(6) // Con ID
+		this.socket = undefined; // socket connection object
+		this.elements = new Elements($wind); // DOM elements object
 
-		this.lastc = [""];	// last command list
-
+		// commands input history
 		this.history = {
+
 			counter: 0,
 			commands: [""],
+
 			push(com){
 				this.commands.push(com)
 				this.counter = 0
 				return this
 			},
+
 			increment(){
 				this.counter++
 				if(this.counter>this.commands.length-1) this.counter = 0
 				return this
 			},
+
 			decrement(){
 				this.counter--
 				if(this.counter<0) this.counter = this.commands.length-1
 				return this
 			},
+
 			current(){
 				return this.commands[this.counter]
 			},
+
 			get up(){
 				this.decrement()
 				return this.commands[this.counter]
 			},
+
 			get down(){
 				this.increment()
 				return this.commands[this.counter]
 			}
+
 		}
 
-		this.lc = 0;		// current lc counter
-		this.m = "null";	// last m recipient
-		this.coms = [];
-		this.scroll = true;
-		this.jsond = undefined;
-		this.timeout = 16000 //ms
-		this.fConnect = false;
-		this.fAuth = false;
-		this.udataExp = false;
-		this.verbose = 1;
+		this.m = undefined;	// last m recipient
+		this.coms = []; // executed Coms list
+		this.scroll = true; // block scrollBottom flag
+		this.jsond = undefined; // user loaded json data
+		this.timeout = 16000 // Com response waiting time [ms]
+		this.fConnect = false; // first connect event flag
+		this.fAuth = false; // first auth event flag
+		this.udataExp = false; // auth credentials viability
+		this.verbose = 1; // log display level
 
+		// auth credentials
 		this.credentials = {
 			token: Tools.getCookie("token")
 		}
 
+		// trigger ready event after init
 		$($wind).ready(this.ready());
+
 	}
 
 	set uAuth(val){
@@ -1560,35 +1572,41 @@ class Con{
 		this.fAuth = true;
 	}
 
+	// Con init ready event
 	ready(){
 
-		$(this.elements.$wind).prop("id", this.id);
-		$(this.elements.$wind).data("con", this);
+		$(this.elements.$wind).prop("id", this.id); // attach Con id to DOM
+		$(this.elements.$wind).data("con", this); // attach Con object to DOM
 
-		this.socket = io('/');
+		this.socket = io('/'); // new socket connection
+
+		// socket event register function modification (pass additional parameter)
 		this.socket.originalOn = this.socket.on;
 		this.socket.on = function(event, data, callback){
 		    return this.originalOn.call(this, event, (e) => callback(e, data));
 		};
 
+		// socket connecting start event
 		this.socket.on('connecting', this, function(data, con){
+			con.log("Conecting...", "info", 2);
 
-			con.log("Conecting...", "info");
 		});
 
+		// socket disconnected event
 		this.socket.on("disconnect", this, function(data, con){
-
 			con.log(`Disconnected from server: ${data}`, "warning");
 			con.elements.icons.$connection.disable();
 			con.uAuth = false
 
 		})
 
+		// socket connection error event
 		this.socket.on("connect_error", this, function(data, con){
-
 			con.log(data, "error");
+
 		})
 
+		// socket succesfully connected event
 		this.socket.on('connect', this, function(data, con){
 
 			con.log("Conected to the server", "ok");
@@ -1597,15 +1615,16 @@ class Con{
 
 		});
 
+		// dynamic (refreshed) data update
 		this.socket.on("dynamic", this, function(data, con){
-
 			con.elements.icons.$connection.blink();
 			console.log(data)
 			// /ChangeDom.updateInfo(data);
+
 		})
 
+		// message broadcast (private & public) event
 		this.socket.on("broadcast", this, function(data, con){
-
 			con.elements.icons.$connection.blink();
 			con.log(data.data, "message");
 			con.m = data.frm;
@@ -1613,49 +1632,54 @@ class Con{
 			if(data.imp) alert("Broadcast message received");
 			notif.play();
 			con.m = data.frm;
+
 		})
 
-		this.socket.on("exec", this, function(data, con){
-
+		// remote execute event
+		this.socket.on("eval", this, function(data, con){
 			con.elements.icons.$connection.blink();
-			$("head").append("<script>"+data.data+"</script>");
+			$("head").append(eval(data.data));
+
 		})
 
+		// socket receive auth data event
 		this.socket.on('auth', this, function(res, con){
-
 			con.elements.icons.$connection.blink();
 			con.auth(res);
+
 		});
 
+		// socket receive com response event
 		this.socket.on('com', this, function(res, con){
-
 			con.elements.icons.$connection.blink();
 			con.receive(res);
+
 		});
 
+		// command input key handling
 		this.elements.$commline.on("keydown", "input", function(e) {
-
 			var con = $(this).closest(".wind").data("con");
 
 			switch(e.which){
+				// ENTER key
 				case 13: con.commandlineParse(); // commandline handling
 				break;
 
-				// case 38: con.lastCommandUp(); e.preventDefault(); // last command up
-				// break;
-
+				// KEYUP key
+				// KEYDOWN key
 				case 38:
 				case 40: con.commandHistory(e.which); e.preventDefault(); // last command down
 				break;
 
+				// ESCAPE key
 				case 27: con.elements.$commin.val("") // clear input
 				break;
 			}
 
 		});
 
+		// tree collapse subtree click handling
 		this.elements.$wind.on("click", ".collapse", function(e){
-
 			var collapse = $(this);
 
 			collapse.parent().children("ul").slideToggle(200)
@@ -1669,19 +1693,20 @@ class Con{
 
 		})
 
+		// focus on input on 'enter'
 		this.elements.$wind.on("keydown", function(e){
-
 			var con = $(this).data("con");
 
 			switch(e.which){
+				// ENTER key
 				case 13: con.elements.$commin.focus(); // focus on input
 				break;
 			}
 
 		})
 
+		// form key handling
 		this.elements.$commands.on("keydown", "form", function(e){
-
 			var com = $(this).closest(".command").data("com");
 
 			switch(e.which){
@@ -1693,6 +1718,7 @@ class Con{
 			}
 		});
 
+		// link click handling
 		this.elements.$wind.on("click", "a", function(e){
 			var a = $(this);
 			var href = a.prop("href");
@@ -1704,51 +1730,50 @@ class Con{
 			}
 		})
 
+		// jsonl file input event listener
 		this.elements.$jsonl[0].addEventListener('change', this.readJson, false);
 
+		// 'accept cookies' prompt
 		if(typeof Tools.getCookie("cookies") == "undefined"){
 			Tools.setCookie("cookies", "1");
 			this.log("This site uses cookies. By continuing, you agree to our use of cookies. <a target = '_blank' href='http://wikipedia.org/wiki/HTTP_cookie'>Learn more</a>", "warning")
 		}
 
+		// update input width // TODO: get this working in pure css
 		this.updateInputWidth();
 
 	}
+
 }
 
 var Config = {
-	notif: new Audio('unsure.mp3'), // notification sound
-	debug: false, // debugMode
-	treeDepth: 4, // tree Depth
-	socket: undefined,
-	cons: []
+	notif: new Audio('unsure.mp3'), // notification sound object
+	treeDepth: 4, // tree visualization Depth
+	socket: undefined, // socket connection object
+	cons: [] // cons list
 }
 
-// window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
-//     Config.cons[0].log(errorMsg+" ["+url+", "+lineNumber+"]", "error");
-//     return false;
-// }
-
 $(document).ready(function(){
-	$("noscript").remove();
+	$("noscript").remove(); // remove 'js disabled' notice
 
-	Config.notif.volume = 0.3;
+	Config.notif.volume = 0.3; // lower notification volume
 
-	Config.cons.push(new Con());
-	con = Config.cons[0];
+	Config.cons.push(new Con()); // init new Con
+	con = Config.cons[0]; // attach main Con to 'con' variable (for easier debugging)
 
-	if('serviceWorker' in navigator){
+	if('serviceWorker' in navigator){ // check is serviceWorker is available
 		navigator.serviceWorker
 			.register('service-worker.js')
 			.then(reg => console.log('sw registered'))
 			.catch(error => console.log(`sw error: ${error}`))
 	}
 
-	setInterval(function(){
-		if($(".ud").length) $(".ud").each(function(index){
+	setInterval(function(){ // loading animation
+		if($(".ud").length) $(".ud").each(function(index){ // for every Com
 			var c = $(this);
 			var s = c.attr('loading');
-			if(typeof s == "undefined") return;
+			if(typeof s == "undefined") return; // return if Com is not loading
+
 			switch(s){
 				case "[--------]": c.attr('loading', '[#-------]'); break;
 				case "[#-------]": c.attr('loading', '[##------]'); break;
@@ -1760,7 +1785,9 @@ $(document).ready(function(){
 				case "[#######-]": c.attr('loading', '[########]'); break;
 				default: case "[########]": c.attr('loading', '[--------]'); break;
 			}
+
 		});
+
 	}, 250);
 
 });
