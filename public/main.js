@@ -1750,7 +1750,8 @@ var Config = {
 	notif: new Audio('unsure.mp3'), // notification sound object
 	treeDepth: 4, // tree visualization Depth
 	socket: undefined, // socket connection object
-	cons: [] // cons list
+	cons: [], // cons list
+	serviceWorker: false // enable serviceWorker
 }
 
 $(document).ready(function(){
@@ -1761,7 +1762,7 @@ $(document).ready(function(){
 	Config.cons.push(new Con()); // init new Con
 	con = Config.cons[0]; // attach main Con to 'con' variable (for easier debugging)
 
-	if('serviceWorker' in navigator){ // check is serviceWorker is available
+	if('serviceWorker' in navigator && Config.serviceWorker){ // check is serviceWorker is available
 		navigator.serviceWorker
 			.register('service-worker.js')
 			.then(reg => console.log('sw registered'))
