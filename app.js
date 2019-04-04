@@ -155,8 +155,8 @@ class DataBase{
 						try{
 							this.f(this.params)
 							this.exit(true)
-						}catch(error){
-							Exe.log({action: "info", data: "Event Error"}, 1)
+						} catch (error) {
+							Exe.log({ action: "info", data: "Event Error" }, 1)
 							this.exit(error)
 						}
 					}
@@ -975,10 +975,10 @@ function dataparse(data){ // parse data coming from /data
 			action: "data",
 			data: "Data recieved succesfully. "+"[Length: "+l+"]"
 		});
-	}catch{
+	} catch (e) {
 		Exe.log({
 			action: "err",
-			data: "Invalid JSON string recieved. "+"[Length: "+l+"]"
+			data: "Invalid JSON string recieved. " + "[Length: " + l + "]"
 		});
 	}
 
@@ -1149,8 +1149,8 @@ stdin.addListener("data", function(d) {
 	c = d.toString().trim();
 	try{
 		console.log( eval(c) );
-	}catch(error){
-		console.error( error );
+	} catch (error) {
+		console.error(error);
 	}
 });
 
