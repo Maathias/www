@@ -919,7 +919,7 @@ function varlog(){ // log statistic information to file
 		}
 		try{
 			dt = JSON.parse(data);
-		}catch{
+		} catch (e) {
 			dt = {
 				"tempin": [],
 				"tempout": [],
