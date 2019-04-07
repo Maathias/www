@@ -1,0 +1,16 @@
+{
+	"mail": {
+		"user": "",
+		"pass": ""
+	},
+	"cert": {
+		"enable": false,
+		"key": "",
+		"crt": "",
+		"ca": ""
+	},
+	"ports": {
+		"main": 3000,
+		"ssl": 443
+	}
+}

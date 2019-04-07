@@ -1,5 +1,7 @@
 // dependencies
-const dotenv = require('dotenv').config(),
+const
+	conf = require('./conf.json'),
+	data = require('./db.json'),
 	express = require('express'),
 	bodyParser = require('body-parser'),
 	path = require('path'),
@@ -12,39 +14,40 @@ const dotenv = require('dotenv').config(),
 	socket = require('socket.io'),
 	chalk = require('chalk'),
 	nodemailer = require('nodemailer'),
-	{ gzip, ungzip } = require('node-gzip'),
-	// other objects
+	{ gzip, ungzip } = require('node-gzip')
+
+// other
+const
 	app = express(),
 	stdin = process.openStdin(),
 	transporter = nodemailer.createTransport({
 		service: 'gmail',
 		auth: {
-			user: process.env.MAIL_USER,
-			pass: process.env.MAIL_PASS
+			user: conf.mail.user,
+			pass: conf.mail.pass
 		}
 	})
 
 // ssl credentials
-if (process.env.CERT_KEY && process.env.CERT_CRT && process.env.CERT_CA)
+if (conf.cert.key && conf.cert.crt && conf.cert.ca && conf.cert.enable)
 	credentials = {
-		key: fs.readFileSync(process.env.CERT_KEY, 'utf8'),
-		cert: fs.readFileSync(process.env.CERT_CRT, 'utf8'),
-		ca: fs.readFileSync(process.env.CERT_CA, 'utf8')
+		key: fs.readFileSync(conf.cert.key, 'utf8'),
+		cert: fs.readFileSync(conf.cert.crt, 'utf8'),
+		ca: fs.readFileSync(conf.cert.ca, 'utf8')
 	}
 
 class DataBase {
 
 	constructor(json) {
-		this.data = JSON.parse(json)
+		this.data = json
 		this.config = {
 			szkola: true,
 			lockdown: false,
 			dlog: false, // sensor to server log
 			llog: false, // info to file log
 			hostname: 'smart-home', // pseudo-hostname
-			redir: false, // https redirection
+			redir: false, // force https
 			verbose: 3, // max log lvl
-			pt: false // prace techniczne
 		}
 		this.stats = {
 			network: {},
@@ -1098,75 +1101,63 @@ app
 	});
 
 app.use(function (err, req, res, next) {
-	return res.status(404).send("lol");
+	return res.status(404).send("404");
 });
 
 // server setup
-if (typeof credentials != 'undefined') {
-	console.log(credentials)
-	const httpsServer = https.createServer(credentials, app)
-}
+
 const httpServer = http.createServer(app),
 	io = new socket()
 		.attach(httpServer)
 
-if (typeof credentials != 'undefined')
+if (conf.cert.enable) {
+	const httpsServer = https.createServer(credentials, app)
 	io.attach(httpsServer)
+}
 
+// stdin input listener
 stdin.addListener("data", function (d) {
 	c = d.toString().trim();
 	try {
 		console.log(eval(c));
-	} catch (error) {
-		console.error(error);
+	} catch (e) {
+		console.error(e);
 	}
 });
 
 // load user database from db.json and start listening
-fs.readFile(path.join(__dirname, 'db.json'), function (err, data) {
-	if (err) {
-		console.log(err);
-	} else {
+global.db = new DataBase(data);
 
-		global.db = new DataBase(data);
+db.onReady = function () {
 
-		db.onReady = function () {
+	Exe.log({
+		action: "info",
+		data: "DataBase ready"
+	}, 1);
 
-			Exe.log({
-				action: "info",
-				data: "DataBase ready"
-			}, 1);
+	// db.getDevices()
+	// setInterval(function(db){
+	// 	db.getDevices()
+	// }, 120*1e3, db)
 
-			// db.getDevices()
-			// setInterval(function(db){
-			// 	db.getDevices()
-			// }, 120*1e3, db)
+	db.schedule._check()
+}
 
-			db.schedule._check()
-		}
-
-		// http standard server
-		httpServer.listen(process.env.PORT_MAIN, function () {
-			Exe.log({
-				action: "info",
-				data: `Server listening on port ${process.env.PORT_MAIN}`
-			}, 1);
-		});
-
-		// https secure server
-		if (typeof credentials != 'undefined')
-			httpsServer.listen(process.env.PORT_SSL, function () {
-				Exe.log({
-					action: "info",
-					data: `Server listening on port ${process.env.PORT_SSL}`
-				}, 1);
-			});
-
-	}
+// http standard server
+httpServer.listen(conf.ports.main, function () {
+	Exe.log({
+		action: "info",
+		data: `Server listening on port ${conf.ports.main}`
+	}, 1);
 });
 
-// data logging
-// setInterval(function(){ if(!config.lockdown)varlog(); }, 60000);
+// https secure server
+if (conf.cert.enable) httpsServer.listen(conf.ports.ssl, function () {
+	Exe.log({
+		action: "info",
+		data: `Server listening on port ${conf.ports.ssl}`
+	}, 1);
+});
 
 // socketio events
 io.on('connection', function (socket) { // connection established event
@@ -1221,23 +1212,20 @@ io.on('connection', function (socket) { // connection established event
 });
 
 app.get('/', function (req, res) {
-	// check if cleint is on local network
-	if (req.ip.startsWith("::ffff:192.168")) var local = true;
-	else var local = false;
-
 	// https redirection
-	if (req.protocol != 'https' && !local && !db.config.redir && typeof credentials != 'undefined') {
+	if (
+		req.protocol != 'https'
+		&& !req.ip.startsWith("::ffff:192.168")
+		&& !db.config.redir
+		&& conf.cert.enable
+	) {
 		res.redirect('https://' + req.hostname + req.originalUrl);
 	} else {
-		if (db.config.pt && !local) { // temporary lockout
-			res.send("Trwają prace techniczne, zapraszam później");
-		} else {
-			res.render('pages/index', {
-				vars: {
-					hostname: db.config.hostname
-				}
-			});
-		}
+		res.render('pages/index', {
+			vars: {
+				hostname: db.config.hostname
+			}
+		});
 	}
 });
 
