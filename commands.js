@@ -22,6 +22,9 @@ module.exports = {
 					(function(commands, response){
 						var out = []
 						for(let com in commands){
+							if (commands[com].permissions[response.socket.udata.group] !== 1){
+								continue
+							}
 							out.push([`<txred>${com}</txred> ${(function(args){
 								let out = ""
 								for(let arg of args){
@@ -36,9 +39,7 @@ module.exports = {
 									out += arg+" "
 								}
 								return out
-							})(commands[com].args)}`, commands[com].desc, `[permission: ${
-								commands[com].permissions[response.socket.udata.group] == 1 ? "<txgrn>Yes</txgrn>" : "<txred>No</txred>"
-							}]`])
+							})(commands[com].args)}`, commands[com].desc])
 						}
 						return out
 					})(db.commands, response)
