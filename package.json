@@ -1,10 +1,12 @@
 {
   "name": "smart-home",
-  "version": "1.0.0",
-  "description": "smart-home server",
+  "version": "1.1.0",
+  "description": "smart-home shell server",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app",
+    "start": "node app"
   },
   "keywords": [
     "node"
@@ -19,7 +21,6 @@
     "bcrypt": "^3.0.4",
     "chalk": "^2.4.2",
     "cookie-parser": "^1.4.4",
-    "dotenv": "^6.2.0",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "node-cmd": "^3.0.0",
