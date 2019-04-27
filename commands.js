@@ -2,30 +2,46 @@ const PERM_FULL = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 const PERM_ROOT = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const PERM_NULL = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-const STAGE_F = "functional"
-const STAGE_D = "development"
+const STAGE_F = 1 // functional
+const STAGE_D = 2 // development
+const STAGE_B = 3 // bugs / not working
 
 module.exports = {
+	motd: {
+		f: com => {
+			com.insert('hey', {
+					flag: 0
+				});
+			com.end();
+		},
+		desc: "Welcome message",
+		args: [],
+		man: "user manual",
+		permissions: PERM_FULL,
+		stage: STAGE_F
+
+	},
+
 	help: {
-		f: (response, db) => {
-			if(response.req.arg[0]){ // command manual
-				var c = response.req.arg[0];
-				var cc = db.commands[response.req.arg[0]]
+		f: (com, db) => {
+			if(com.req.arg[0]){ // command manual
+				var c = com.req.arg[0];
+				var cc = db.commands[com.req.arg[0]]
 				if(cc){
-					response.insert({data: cc.man}).send()
+					com.insert(cc.man).end()
 				}else{
-					response.insert({data: `User manual for ${c} not found`, flag: 6, arg: "error"}).send()
+					com.insert(`User manual for ${c} not found`, {flag: 6, arg: "error"}).end()
 				}
 
 			}else{ // commands list
-				response.insert({data:
-					(function(commands, response){
+				com.insert(
+					(function(commands, com){
 						var out = []
-						for(let com in commands){
-							if (commands[com].permissions[response.socket.udata.group] !== 1){
+						for(let command in commands){
+							if (commands[command].permissions[com.handle.group] !== 1){
 								continue
 							}
-							out.push([`<txred>${com}</txred> ${(function(args){
+							out.push([`<txred>${command}</txred> ${(function(args){
 								let out = ""
 								for(let arg of args){
 									if(arg.startsWith("[") && arg.endsWith("]")){ // necessary
@@ -39,11 +55,11 @@ module.exports = {
 									out += arg+" "
 								}
 								return out
-							})(commands[com].args)}`, commands[com].desc])
+							})(commands[command].args)}`, commands[command].desc])
 						}
 						return out
-					})(db.commands, response)
-					, flag: 10}).send()
+					})(db.commands, com)
+					, {flag: 10}).end()
 
 			}
 
@@ -57,23 +73,20 @@ module.exports = {
 	},
 
 	evals: {
-		f: response => {
+		f: com => {
 			try{
-				var e = eval(response.req.arg.join(" "));
-				response.insert({
-					data: e,
+				var e = eval(com.req.arg.join(" "));
+				com.insert(e, {
 					flag: 9
 				});
 			}catch(error){
-				console.log(error);
-				response.insert({
-					data: error.message,
+				com.insert(error.message, {
 					flag: 6,
 					arg: "error"
 				});
 			}
 
-			response.send();
+			com.end();
 		},
 		desc: "Eval-server. Executes js code on server",
 		args: ["[javascript]"],
@@ -84,17 +97,17 @@ module.exports = {
 	},
 
 	about: {
-		f: response => {
-			response.insert({
-				data: [
-					["<txblu>Facebook</txblu>", "<a target='_blank' href='http://facebook.com/pstrucha.mateusz'>/pstrucha.mateusz</a>"],
-					["<txorn>Reddit</txorn>", "<a target='_blank' href='http://reddit.com/u/mathias_-'>/u/mathias_-</a>"],
-					["<txdbl>GitHub</txdbl>", "<a target='_blank' href='https://github.com/Maathias'>/Maathias</a>"],
-					["<txblu>Discord</txblu>", "<a target='_blank' href='https://discord.gg/z8kW2eY'>WKR</a>"],
-					["<txorn>StackOverflow</txorn>", "<a target='_blank' href='https://stackoverflow.com/users/7358565/mathias'>mathias</a>"]
-				],
-				flag: 10
-			}); response.send();
+		f: com => {
+			com.insert([
+				["<txblu>Facebook</txblu>", "<a target='_blank' href='http://facebook.com/pstrucha.mateusz'>/pstrucha.mateusz</a>"],
+				["<txorn>Reddit</txorn>", "<a target='_blank' href='http://reddit.com/u/mathias_-'>/u/mathias_-</a>"],
+				["<txdbl>GitHub</txdbl>", "<a target='_blank' href='https://github.com/Maathias'>/Maathias</a>"],
+				["<txblu>Discord</txblu>", "<a target='_blank' href='https://discord.gg/z8kW2eY'>WKR</a>"],
+				["<txorn>StackOverflow</txorn>", "<a target='_blank' href='https://stackoverflow.com/users/7358565/mathias'>mathias</a>"]
+			], {
+					flag: 10
+				});
+			com.end();
 		},
 		desc: "Displays contact info",
 		args: [],
@@ -104,53 +117,34 @@ module.exports = {
 
 	},
 
-	do: {
-		f: response => {
-			response.addTime("do.begin");
-			var out = cmd.get(response.req.arg.join(" "), function(err, data, stderr){
-				response.addTime("do.end");
-				if(stderr){
-					response.insert({
-						data: stderr,
-						flag: 6,
-						arg: "error"
-					});
-				}else if(err){
-					response.insert({
-						data: err,
-						flag: 6,
-						arg: "error"
-					});
-				}else{
-					response.insert({
-						data: data,
-						flag: response.req.arg[0]=="cat"?11:0
-					});
-				}
+	bash: {
+		f: com => {
+			cmd = require('node-cmd')
 
-				response.send();
-			});
-			setTimeout(function(out){
-				response.addTime("do.kill");
-				cmd.run(`kill ${out.pid}`)
-			}, 15000, out)
+			if (!com.cmd) {
+				com.cmd = cmd.run('bash')
+				com.cmd.stdin.setEncoding('utf-8')
+				com.cmd.stdout.on('data', data => { com.insert(data) })
+			}
+			
+			com.cmd.stdin.write(`${com.req.arg[0]}\n`)
+
 		},
 		desc: "Executes linus commands (on root)",
 		args: ["[linux syntax]"],
 		man: "user manual",
-		permissions: PERM_ROOT,
-		stage: STAGE_F
+		permissions: PERM_FULL,
+		stage: STAGE_B
 
 	},
 
 	ping: {
-		f: response => {
-			response.insert({
-				data: "pong",
-				flag: 12
-			}).send();
+		f: com => {
+			com.insert("pong", {
+				flag: 0
+			}).end();
 		},
-		desc: "tests internet connection",
+		desc: "tests requeest latency",
 		args: [],
 		man: "user manual",
 		permissions: PERM_FULL,
@@ -159,16 +153,15 @@ module.exports = {
 	},
 
 	uptime: {
-		f: response => {
-			response.insert({
-				data: [
+		f: com => {
+			com.insert([
 					[`<txred>Uptime:</txred>`, `<span class="info0">${db.stats['uptime']}</span>`],
 					[`<txred>Load average:</txred>`, `<span class="info1">${db.stats['load1']}</span>% <span class="info2">${db.stats['load2']}</span>% <span class="info3">${db.stats['load3']}</span>%`],
 					[`<txred>Memory:</txred>`, `<span class="info4">${db.stats['memory']}</span>%`],
 					[`<txred>In terminal:</txred>`, `<span class="info5">${db.stats['users']}</span>`]
-				],
+				], {
 				flag: 10 // toTable
-			});	response.send();
+			});	com.end();
 		},
 		desc: "Displays current OS stats",
 		args: [],
@@ -179,17 +172,15 @@ module.exports = {
 	},
 
 	stats: {
-		f: response => {
-			response.insert({
-				//'[TIME] <txblu>'+new Date()+'</txblu>'+
-				data: [
+		f: com => {
+			com.insert([
 					["[TEMP]", `<txyel>OUTSIDE: </txyel><span class="info6">${db.stats['tempout']}</span>C`, `<txcya>INSIDE: </txcya><span class="info7">${db.stats['tempin']}</span>C`],
 					["[HUM]", `<txyel>OUTSIDE: </txyel><span class="info8">${db.stats['humout']}</span>%`, `<txcya>INSIDE: </txcya><span class="info9">${db.stats['humin']}</span>%`]
-				],
+				], {
 				flag: 10 // toTable
 				// data: <br></span>         <br></span>          <br></span>[BED]  '+(info['bed']?"occupied":"empty")
 			});
-			response.send();
+			com.end();
 		},
 		desc: "Displys current physical stats",
 		args: [],
@@ -200,11 +191,10 @@ module.exports = {
 	},
 
 	devices: {
-		f: response => {
-			response.insert({
-				data: {Network: db.stats.network, Offline: db.stats.offline},
+		f: com => {
+			com.insert({Network: db.stats.network, Offline: db.stats.offline}, {
 				flag: 9 // toTree
-			});	response.send();
+			});	com.end();
 		},
 		desc: "Display network devices connection history",
 		args: [],
@@ -215,18 +205,18 @@ module.exports = {
 	},
 
 	connection: {
-		f: response => {
-			response.insert({
-				data: [
-					["<txcya>socket</txcya>.<txred>shortid</txred>", response.socket.udata.shortid],
-					["<txcya>socket</txcya>.<txred>ip</txred>", response.socket.udata.ip],
-					["<txcya>socket</txcya>.<txred>hostname</txred>", response.socket.handshake.headers.host],
-					["<txcya>socket</txcya>.<txred>ssl</txred>", response.socket.handshake.secure],
-					["<txcya>Last Login</txcya>", response.socket.udata.ll],
-					["<txcya>Permission Group</txcya>", response.socket.udata.group]
-				],
+		f: com => {
+			com.insert([
+					["<txcya>handle</txcya>.<txred>shortid</txred>", com.handle.shortid],
+					["<txcya>handle</txcya>.<txred>ip</txred>", com.handle.ip],
+					["<txcya>handle</txcya>.<txred>hostname</txred>", com.handle.hostname],
+					["<txcya>handle</txcya>.<txred>ssl</txred>", com.handle.secure],
+					["<txcya>Last Login</txcya>", com.handle.ll],
+					["<txcya>Permission Group</txcya>", com.handle.group]
+				], {
 				flag: 10 // toTable
-			});	response.send();
+			});
+			com.end()
 		},
 		desc: "Displays current socket connection data",
 		args: [],
@@ -237,41 +227,41 @@ module.exports = {
 	},
 
 	login: {
-		f: response => {
+		f: com => {
 
 			if( // data validation
-				(typeof response.req.arg != "object")||
-				(typeof response.req.arg.remember != 'boolean')||
-				(typeof response.req.arg.login != 'string')||
-				(typeof response.req.arg.pass != 'string')
+				(typeof com.req.arg != "object")||
+				(typeof com.req.arg.remember != 'boolean')||
+				(typeof com.req.arg.login != 'string')||
+				(typeof com.req.arg.pass != 'string')
 			){
-				response.insert({
+				com.insert({
 					data: "login: input error",
 					flag: 6,
 					arg: "error"
-				}); response.send();
+				}); com.end();
 				return
 			}
 
 			// no user in db
-			if(typeof db.data.users[response.req.arg.login] == "undefined"){
-				response.insert({
-					data: `login: user ${response.req.arg.login} doesn't exist`,
+			if(typeof db.data.users[com.req.arg.login] == "undefined"){
+				com.insert({
+					data: `login: user ${com.req.arg.login} doesn't exist`,
 					flag: 6,
 					arg: "error"
-				}); response.send();
+				}); com.end();
 				return
 			}
 
-			response.addTime("login.begin"); // timemark
+			com.addTime("login.begin"); // timemark
 
 			// password compare
-			bcrypt.compare(response.req.arg.pass, db.users[response.req.arg.login].password, function(err, r){
+			bcrypt.compare(com.req.arg.pass, db.users[com.req.arg.login].password, function(err, r){
 				if(r){ // succes
-					response.addTime("login.pass-ok");
-					var exp = response.req.arg.pass.remember ? "; expires=Fri, 1 Jan 2038 00:00:00 UTC" : "; expires=0"
+					com.addTime("login.pass-ok");
+					var exp = com.req.arg.pass.remember ? "; expires=Fri, 1 Jan 2038 00:00:00 UTC" : "; expires=0"
 
-					var user = db.users[response.req.arg.login]
+					var user = db.users[com.req.arg.login]
 
 					user.ll = Gen.date();
 
@@ -282,31 +272,31 @@ module.exports = {
 						udata: socket.udata,
 						id: socket.id,
 						data: {
-							c: response.req.com,
-							arg: response.req.arg
+							c: com.req.com,
+							arg: com.req.arg
 						}
 					});
 
 					connections.remove(socket.udata);
-					socket.udata = db.verify(response.req.arg.login, session, socket.handshake.address.slice(7), socket.id);
+					socket.udata = db.verify(com.req.arg.login, session, socket.handshake.address.slice(7), socket.id);
 					connections.add(socket.udata);
 
-					response.insert({
+					com.insert({
 						data: {
-							"user": response.req.arg.login,
+							"user": com.req.arg.login,
 							"session": session,
 							"expiry": exp
 						},
 						udata: socket.udata,
 						flag: 1
-					}); response.send();
+					}); com.end();
 				}else{// password incorrect
-					response.addTime("login.pass-incorrect");
-					response.insert({
+					com.addTime("login.pass-incorrect");
+					com.insert({
 						data: "login: incorrect password",
 						flag: 6,
 						arg: "error"
-					}); response.send();
+					}); com.end();
 				}
 			});
 		},
@@ -314,7 +304,7 @@ module.exports = {
 		args: ["[object Object]"],
 		man: "user manual",
 		permissions: PERM_FULL,
-		stage: STAGE_D
+		stage: STAGE_B
 
 	},
 
@@ -322,7 +312,7 @@ module.exports = {
 
 /*this.commands = {
 	// : {
-	// 	f: response => {
+	// 	f: com => {
 	//
 	// 	},
 	// 	desc: "",
@@ -337,7 +327,7 @@ module.exports = {
 	// 		"<txred>me</txred> 'displays your id'",
 	// 		"<txred>cd</txred> <txgrn>[dir]</txgrn>",
 	// 		"<txred>pwd</txred> 'get full current path'",
-	// 		"<txred>m</txred> <txcya>|-user|</txcya> message 'send message to user'",
+	// 		"<txred>m</txred> <txcya>|-user|</txcya> message 'end message to user'",
 	// 		"<txred>chart 'displays sensor data chart'</txred>",
 	// 		"<txred>arduino</txred>",
 	// 		"<txred>hash</txred> <txgrn>[-gen|-check]</txgrn> <txgrn>[\"string\"]</txgrn> <txcya>|hash|</txcya>",
@@ -354,15 +344,15 @@ module.exports = {
 	// 		"<txred>broadcast</txred> <txgrn>[message]</txgrn>"
 
 	/*
-	switch(response.req.com){
+	switch(com.req.com){
 default:
-response.unknown();
+com.unknown();
 break;
 case "me":
-response.insert({
+com.insert({
 	data: "tak"
 });
-response.send();
+com.end();
 break;
 
 /*
@@ -393,17 +383,17 @@ if((typeof(db.users[arg[0]])!="undefined")||(arg[0]=="guest")){ // check if 'use
 			data: arg[1]
 		}, socket)
 
-		response.insert({
+		com.insert({
 			data: "script sent",
 			flag: 6,
 			arg: "ok"
-		}); response.send();
+		}); com.end();
 	}else{	// 'user' is offline
-		response.insert({
+		com.insert({
 			data: "user is offline",
 			flag: 6,
 			arg: "error"
-		}); response.send();
+		}); com.end();
 	}
 }else{	// 'user' does not exist
 	usid = getconn(arg[0]);
@@ -412,16 +402,16 @@ if((typeof(db.users[arg[0]])!="undefined")||(arg[0]=="guest")){ // check if 'use
 		io.to(usid.socketid).emit('exec', {
 			data: arg[1]
 		});
-		response.insert({
+		com.insert({
 			data: "script sent",
 			flag: 6,
 			arg: "ok"
-		}); response.send();
-	}else response.insert({
+		}); com.end();
+	}else com.insert({
 		data: "id doesn't exist",
 		flag: 6,
 		arg: "error"
-	}); response.send();
+	}); com.end();
 }
 
 break;
@@ -491,9 +481,9 @@ break;
 //############################################################################################################################
 
 case "pwd":
-response.insert({
-	data: response.req.dir
-});	response.send();
+com.insert({
+	data: com.req.dir
+});	com.end();
 
 break;
 //############################################################################################################################
@@ -604,7 +594,7 @@ fs.readFile(loc, function (err, data){
 	}else{
 		sensordata = JSON.parse(data);
 
-		senddata = {
+		enddata = {
 			type: 'line',
 			data : [],
 			options: {
@@ -623,7 +613,7 @@ fs.readFile(loc, function (err, data){
 							display: false
 		}}]}}}
 
-		senddata.data = {
+		enddata.data = {
 			labels: sensordata.time.slice(slicea, sliceb),
 			datasets: [
 				{
@@ -666,7 +656,7 @@ fs.readFile(loc, function (err, data){
 		},
 
 		coms({
-			data: senddata,
+			data: enddata,
 			arg: [],
 			flag: 2
 		}, socket);
@@ -677,8 +667,8 @@ break;
 //############################################################################################################################
 // FIXME: lesser garbage
 case "help":
-if(typeof response.req.arg[0] != "undefined"){
-	switch(response.req.arg[0]){
+if(typeof com.req.arg[0] != "undefined"){
+	switch(com.req.arg[0]){
 		default: l = ["Instructions for command "+arg[0]+" not found"];
 		break;
 
@@ -709,7 +699,7 @@ if(typeof response.req.arg[0] != "undefined"){
 	"<txred>me</txred> 'displays your id'",
 	"<txred>cd</txred> <txgrn>[dir]</txgrn>",
 	"<txred>pwd</txred> 'get full current path'",
-	"<txred>m</txred> <txcya>|-user|</txcya> message 'send message to user'",
+	"<txred>m</txred> <txcya>|-user|</txcya> message 'end message to user'",
 	"<txred>chart 'displays sensor data chart'</txred>",
 	"<txred>arduino</txred>",
 	"<txred>hash</txred> <txgrn>[-gen|-check]</txgrn> <txgrn>[\"string\"]</txgrn> <txcya>|hash|</txcya>",
@@ -726,9 +716,9 @@ if(typeof response.req.arg[0] != "undefined"){
 	"<txred>broadcast</txred> <txgrn>[message]</txgrn>"
 ];
 
-response.insert({
+com.insert({
 	data: multiLine(l)
-});	response.send();
+});	com.end();
 break;
 //############################################################################################################################
 // FIXME: lesser garbage
@@ -784,7 +774,7 @@ break;
 //############################################################################################################################
 
 case "uptime":
-response.insert({
+com.insert({
 	data: [
 		['<txred>Uptime:</txred>', '<span class="info0">'+info['uptime']+'</span>'],
 		['<txred>Load average:</txred>', '<span class="info1">'+info['load1']+'</span>% <span class="info2">'+info['load2']+'</span>% <span class="info3">'+info['load3']+'</span>%'],
@@ -792,12 +782,12 @@ response.insert({
 		['<txred>In terminal:</txred>', '<span class="info5">'+info['users']+'</span>']
 	],
 	flag: 10 // toTable
-});	response.send();
+});	com.end();
 break;
 //############################################################################################################################
 
 case "stats":
-response.insert({
+com.insert({
 	//'[TIME] <txblu>'+new Date()+'</txblu>'+
 	data: [
 		["[TEMP]", '<txyel>OUTSIDE: </txyel><span class="info6">'+info['tempout']+'</span>C', '<txcya>INSIDE: </txcya><span class="info7">'+info['tempin']+'</span>C'],
@@ -806,7 +796,7 @@ response.insert({
 	flag: 10 // toTable
 	// data: <br></span>         <br></span>          <br></span>[BED]  '+(info['bed']?"occupied":"empty")
 });
-response.send();
+com.end();
 
 break;
 //############################################################################################################################
@@ -817,17 +807,17 @@ for(var i = 0; i< info.network.length; i++){
 	l +='<li><txcya>'+info.network[i]+'</txcya></li>'
 }
 l = '<ul class="ascii"><li><txred>Network</txred><ul class="info10">'+l+'<li><txblu>Raspberry</txblu><ul><li><txred>I2C</txred><ul></ul></li><li><txred>Serial</txred><ul></ul></li></ul></li></ul></li></ul>';
-response.insert({
+com.insert({
 	data: {Network: info.network},
 	flag: 9 // toTree
-});	response.send();
+});	com.end();
 
 break;
 //############################################################################################################################
 // TODO: clean up this garbage
 case "connection":
 
-response.insert({
+com.insert({
 	data: [
 		["<txcya>soc</txcya>.<txred>shortid</txred>", socket.udata.shortid],
 		["<txcya>soc</txcya>.<txred>ip</txred>", socket.handshake.address.slice(7)],
@@ -846,7 +836,7 @@ response.insert({
 
 	flag: 10 // toTable
 	// 'Welcome <'+socket.udata.badge+'>'+socket.udata.login+'</'+socket.udata.badge+'>@<txgrn>'+config.hostname+'</txgrn>!<br><txred>soc</txred><txcya>.shortid:</txcya>      '+socket.id.slice(0, 6)+'<br><txred>soc</txred><txcya>.ip:</txcya>           '+socket.handshake.address.slice(7)+'<br><txred>soc</txred><txcya>.hostname:</txcya>     '+socket.handshake.headers.host+'<br><txred>soc</txred><txcya>.ssl:</txcya>          '+socket.handshake.secure+'<br><txcya>Last login:</txcya>       '+socket.udata.ll+'<br><txcya>Permission group:</txcya> '+socket.udata.group
-});	response.send();
+});	com.end();
 
 break;
 //############################################################################################################################
@@ -948,7 +938,7 @@ bcrypt.genSalt(10, function(err, salt){
 		user = new User(hash, arg.mail, arg.name);
 		db.users[arg.login] = user;
 
-		transporter.sendMail({
+		transporter.endMail({
 			from: 'mathias.ddns.net',
 			to: arg.mail,
 			subject: 'E-mail address confirmation',
@@ -959,7 +949,7 @@ bcrypt.genSalt(10, function(err, salt){
 			}else{
 				lui({
 					action: "info",
-					data: 'Email sent: ' + info.response
+					data: 'Email sent: ' + info.com
 				});
 			}
 		});
@@ -986,9 +976,9 @@ break;
 case "logout":
 
 if(socket.udata.login == "guest"){
-	response.insert({
+	com.insert({
 		data: "logout: you aren't logged in"
-	}); response.send();
+	}); com.end();
 	break;
 }
 
@@ -998,8 +988,8 @@ var l = {
 	"expiry": ""
 }
 
-if(response.req.arg[0]=="-a"){
-	db.users[response.req.arg[0]].hash = [];
+if(com.req.arg[0]=="-a"){
+	db.users[com.req.arg[0]].hash = [];
 }
 
 lui({
@@ -1007,8 +997,8 @@ lui({
 	udata: socket.udata,
 	id: socket.id,
 	data: {
-		c: response.req.com,
-		arg: response.req.arg
+		c: com.req.com,
+		arg: com.req.arg
 	}
 });
 
@@ -1016,11 +1006,11 @@ connections.remove(socket.udata);
 socket.udata = db.verify("", "", socket.handshake.address.slice(7), socket.id);
 connections.add(socket.udata);
 
-response.insert({
+com.insert({
 	data: l,
 	flag: 1,
 	udata: socket.udata,
-}); response.send();
+}); com.end();
 
 break;
 //############################################################################################################################

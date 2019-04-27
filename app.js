@@ -1,20 +1,59 @@
-// dependencies
-const
-	conf = require('./conf.json'),
-	data = require('./db.json'),
-	express = require('express'),
-	bodyParser = require('body-parser'),
-	path = require('path'),
-	fs = require("fs"),
-	cmd = require('node-cmd'),
-	cookieParser = require('cookie-parser'),
-	// bcrypt = require('bcrypt'),
-	http = require('http'),
-	https = require('https'),
-	socket = require('socket.io'),
-	chalk = require('chalk'),
-	nodemailer = require('nodemailer'),
-	{ gzip, ungzip } = require('node-gzip')
+// // dependencies
+// 	const conf = require('./conf.json')
+// 	console.log('loading')
+// 	const data = require('./db.json')
+// 	console.log('loading')
+// 	const express = require('express')
+// 	console.log('loading')
+// 	const bodyParser = require('body-parser')
+// 	console.log('loading')
+// 	const path = require('path')
+// 	console.log('loading')
+// 	const fs = require("fs")
+// 	console.log('loading')
+// 	const cmd = require('node-cmd')
+// 	console.log('loading')
+// 	const cookieParser = require('cookie-parser')
+// 	console.log('loading')
+// 	// const bcrypt = require('bcrypt')
+// 	console.log('loading')
+// 	const http = require('http')
+// 	console.log('loading')
+// 	const https = require('https')
+// 	console.log('loading')
+// 	const socket = require('socket.io')
+// 	console.log('loading')
+// 	const chalk = require('chalk')
+// 	console.log('loading')
+// 	const nodemailer = require('nodemailer')
+// 	console.log('loading')
+// 	const { gzip, ungzip } = require('node-gzip')
+// 	console.log('loading')
+
+const dependencies = [
+	['Functions', './Functions.js'],
+	['conf', './conf.json'],
+	['data', './db.json'],
+	'express',
+	['bodyParser', 'body-parser'],
+	'path',
+	'fs',
+	'node-cmd',
+	['cookieParser', 'cookie-parser'],
+	'http', 'https',
+	['socket', 'socket.io'],
+	'chalk',
+	'nodemailer',
+	'node-gzip'
+]
+
+for(let dep of dependencies){
+	if(typeof dep == 'string') var name = value = dep
+	else if(dep instanceof Array) var name = dep[0], value = dep[1]
+	global[name] = require(value)
+	Functions.log({ action: 'info', data: `Loading '${name}' module` })
+}
+
 
 // other
 const
@@ -28,13 +67,13 @@ const
 		}
 	})
 
-// ssl credentials
-if (conf.cert.key && conf.cert.crt && conf.cert.ca && conf.cert.enable)
-	credentials = {
-		key: fs.readFileSync(conf.cert.key, 'utf8'),
-		cert: fs.readFileSync(conf.cert.crt, 'utf8'),
-		ca: fs.readFileSync(conf.cert.ca, 'utf8')
-	}
+// // ssl credentials
+// if (conf.cert.key && conf.cert.crt && conf.cert.ca && conf.cert.enable)
+// 	credentials = {
+// 		key: fs.readFileSync(conf.cert.key, 'utf8'),
+// 		cert: fs.readFileSync(conf.cert.crt, 'utf8'),
+// 		ca: fs.readFileSync(conf.cert.ca, 'utf8')
+// 	}
 
 class DataBase {
 
@@ -119,6 +158,7 @@ class DataBase {
 		this._macNames = {
 			"70:85:c2:70:88:37": "DESKTOP",
 			'40:65:a3:90:2a:04': "dekoder",
+			'dc:0e:a1:18:a9:2e': "SERVER",
 			'68:a3:c4:c7:27:90': "TOSHIBA",
 			'90:72:82:0d:77:ec': "funbox",
 			'0c:8f:ff:64:de:58': "Huawei P10 Lite",
@@ -159,7 +199,7 @@ class DataBase {
 							this.f(this.params)
 							this.exit(true)
 						} catch (error) {
-							Exe.log({ action: "info", data: "Event Error" }, 1)
+							Functions.log({ action: "info", data: "Event Error" }, 1)
 							this.exit(error)
 						}
 					}
@@ -169,7 +209,7 @@ class DataBase {
 
 			_check() {
 
-				Exe.log({ action: "info", data: "Checking Events" }, 3)
+				Functions.log({ action: "info", data: "Checking Events" }, 3)
 
 				var now = new Date()
 				var next = new Date()
@@ -177,7 +217,7 @@ class DataBase {
 				for (let e of this._list) {
 					if (!e.stats.done) {
 						if (e.time.getTime() <= now.getTime()) {
-							Exe.log({ action: "info", data: "Event Found" }, 2)
+							Functions.log({ action: "info", data: "Event Found" }, 2)
 							e.exec()
 						} else {
 							if ((e.time.getTime() < next.getTime()) || (next.getTime() == now.getTime())) {
@@ -190,7 +230,7 @@ class DataBase {
 				// for(let e of this._regular){
 				// 	if(!e.stats.done){
 				// 		if(e.time[e.time.when[0]]() - now[e.time.when[0]]()){
-				// 			Exe.log({action: "info", data: "Event Found"}, 2)
+				// 			Functions.log({action: "info", data: "Event Found"}, 2)
 				// 			e.exec()
 				// 		}else{
 				// 			console.log((e.time[e.time.when[0]]() - now[e.time.when[0]]()) *e.time.when[1])
@@ -203,7 +243,7 @@ class DataBase {
 
 				let n = next.getTime() - now.getTime()
 				if (n != 0) {
-					Exe.log({ action: "info", data: `Next event check in: ${n} ms` }, 3)
+					Functions.log({ action: "info", data: `Next event check in: ${n} ms` }, 3)
 					// clearTimeout(this.timeout)
 					this.timeout = setTimeout(function (s) { s._check() }, n, this)
 					return
@@ -240,7 +280,7 @@ class DataBase {
 
 	getDevices() {
 
-		Exe.log({
+		Functions.log({
 			action: "info",
 			data: "Updating device list"
 		}, 2)
@@ -255,7 +295,7 @@ class DataBase {
 				let m
 				var len = 0
 
-				Exe.log({
+				Functions.log({
 					action: "info",
 					data: "arp-scan done"
 				}, 3)
@@ -284,7 +324,7 @@ class DataBase {
 						mac: m[2],
 						desc: m[3],
 						name: name,
-						connected: Gen.date('long')
+						connected: Functions.date('long')
 					}
 				}
 
@@ -308,7 +348,7 @@ class DataBase {
 					if (!list[key]) { // goes offline
 
 						db.stats.offline[key] = db.stats.network[key];
-						db.stats.offline[key].disconnected = Gen.date('long')
+						db.stats.offline[key].disconnected = Functions.date('long')
 
 						delete db.stats.network[key]
 
@@ -325,7 +365,7 @@ class DataBase {
 				// for(let key in db.stats.network){
 				// 	if(!db.stats.offline[key]){
 				// 		db.stats.offline[key] = db.stats.network[key];
-				// 		db.stats.offline[key].date = Gen.date()
+				// 		db.stats.offline[key].date = Functions.date()
 				// 	}
 				//
 				// }
@@ -336,7 +376,7 @@ class DataBase {
 				// 	}
 				// }
 
-				Exe.log({
+				Functions.log({
 					action: "info",
 					data: `arp-scan -> ${len} devices online`
 				}, 3)
@@ -348,15 +388,15 @@ class DataBase {
 
 	addAccount(data) {
 
-		Exe.log({
+		Functions.log({
 			action: "info",
 			data: "Creating user account"
 		}, 2);
 
 		var id = (function (len, users) {
-			var id = Gen.ID(len);
+			var id = Functions.ID(len);
 			while (users[id]) {
-				id = Gen.ID(len);
+				id = Functions.ID(len);
 			}
 			return id
 		})(6, this.data.users)
@@ -372,7 +412,7 @@ class DataBase {
 
 	saveData() {
 
-		Exe.log({
+		Functions.log({
 			action: "info",
 			data: "Saving database file"
 		}, 1);
@@ -382,7 +422,7 @@ class DataBase {
 				console.log(err);
 				return err;
 			} else {
-				Exe.log({
+				Functions.log({
 					action: "info",
 					data: "Database saved"
 				}, 2);
@@ -391,27 +431,6 @@ class DataBase {
 		});
 	}
 
-	verify(credentials) {
-
-		if (credentials) {
-			if (credentials.token) {
-				var token = credentials.token.split(":");
-				if (token.length == 2) {
-					if (typeof this.data.tokens[token[0]] != "undefined") {
-						if (this.data.tokens[token[0]] == token[1]) {
-							return new Connection(credentials, this.data.users[token[0]]);
-						} else {
-							console.log("identity theft attempt")
-						}
-					}
-				}
-			}
-			return new Connection(credentials);
-		}
-
-		throw Error("verify credentials undefined")
-
-	}
 
 	checkPermissions(request, udata) { // check permissions
 		if (typeof this.commands[request.com] != "undefined") {
@@ -484,9 +503,9 @@ class DataBase {
 
 	emitToGroup(e, data, group, direction) {
 
-		var direction = Che.isDefined(direction, "only")
+		var direction = Functions.isDefined(direction, "only")
 
-		Exe.log({
+		Functions.log({
 			action: "info",
 			data: `Emit to group ${group} ${direction}`
 		}, 3);
@@ -510,33 +529,46 @@ class DataBase {
 
 }
 
-class Connection {
-	constructor(credentials, user) {
-		var user = Che.isDefined(user, {
-			login: "guest",
-			group: 9,
-			ll: "n/a"
-		})
+class Connection{
+	constructor(obj){
+		var {req, res, socket, cred} = obj
+		if(obj.req){
 
-		switch (user.group) {
-			case 0: this.badge = "txred"; break;
-			case 1: this.badge = "txblu"; break;
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9: this.badge = "txcya"; break;
-		}
+			if(req.headers['x-forwarded-for'])
+				this.ip = req.headers['x-forwarded-for']
+			else
+				this.ip = req.ip
+			this.shortid = Functions.ID(6)
+			this.method = req.method
+			this.status = res.statusCode
+			this.path = req.path
+			this.hostname = req.hostname
+			this.secure = req.secure
 
-		this.login = user.login;
-		this.group = user.group;
-		this.ll = user.ll;
-		this.ip = credentials.ip.slice(7);
-		this.socketid = credentials.socketid;
-		this.shortid = Gen.ID(6);
+			this.req = obj.req
+
+		}else if(obj.socket){
+
+			if (socket.handshake.headers['x-forwarded-for'])
+				this.ip = socket.handshake.headers['x-forwarded-for']
+			else
+				this.ip = socket.handshake.address
+
+			this.shortid = Functions.ID(6)
+			this.secure = socket.handshake.secure
+			this.hostname = socket.handshake.headers.host
+
+			this.socket = socket
+
+			this.login = 'guest'
+			this.group = 9
+			this.ll = 'n/a'
+			this.badge = 'txcya'
+			this.coms = []
+
+			this.authStat = 1
+
+		}else throw new Error("Unknown connection type")
 	}
 
 	get userInfo() {
@@ -549,373 +581,109 @@ class Connection {
 		}
 	}
 
+	auth(cred){
+		if(cred){
+			if(cred.token && cred.user){
+				if (db.data.tokens[cred.user]){
+					var n = db.data.tokens[cred.user].indexOf(cred.token)
+					if (n != -1) {
+						var user = db.data.users[cred.user]
+						this.login = user.login
+						this.group = user.group
+						this.ll = user.ll
+						this.badge = (grp => {
+							switch (grp) {
+								case 0: return "txred"
+								case 1: return "txblu"
+								case 2:
+								case 3:
+								case 4:
+								case 5:
+								case 6:
+								case 7:
+								case 8:
+								case 9: return "txcya"
+							}
+						})(user.group)
+						this.authStat = 0
+						return 0
+					} else {
+						this.authStat = 2
+						return 2
+					}
+				}else{
+					this.authStat = 3
+					return 3
+				}
+			}
+		}
+	}
 }
 
-class Response {
-	constructor(obj, socket) {
-		this.socket = socket;
-		this.ready = false;
-		this.error = undefined;
-		this.sent = false;
-		this.lui = undefined;
+class Com {
+	constructor(req, handle) {
+		this.handle = handle
+		this.req = req
 
-		this.req = obj;
-		// this.req.com = obj.com;
-		// this.req.arg = obj.arg;
-		// this.req.dir = obj.dir;
-		// this.req.id = Che.isDefined(obj.id, null);
-		// this.req.con = Che.isDefined(obj.con, 0);
-		// this.req.udata = Che.isDefined(obj.udata, null);
+		this.data = {
+			blocks: []
+		}
 
-		this.res = {};
-		this.res.data = null;
-		this.res.flag = 0;
-		this.res.arg = null;
-		this.res.frm = "root";
-		this.res.dir = null;
-		this.res.lui = null;
-		this.res.udata = this.socket.udata.userInfo;
-		this.res.con = this.req.con;
-		this.res.id = this.req.id;
-		this.res.time = [];
-
-		this.start = process.hrtime();
-		this.lastTime = this.start;
+		this.res = {
+			udata: handle.userInfo,
+			con: req.con,
+			id: req.id,
+		}
 	}
 
-	addTime(desc, hrt) {
+	addTime(){}
 
-		let t = Che.isDefined(hrt, process.hrtime(this.lastTime));
-		this.lastTime = process.hrtime();
-		this.res.time.push(
-			[
-				Tra.hrtimeToMs(t),
-				desc
-			]
-		);
+	Block(data, meta) {
+		var data = Functions.isDefined(data, {}),
+			meta = Functions.isDefined(meta, {})
+		return {
+			id: Functions.ID(6),
+			sent: false,
+			data: data,
+			meta: meta,
+		}
+		
+	}
+
+	insert(data, meta) {
+		this.data.blocks.push(this.Block(data, meta))
+		var newN = this.data.blocks.length - 1
+		this.data.blocks[newN].meta.n = newN
+		this.update()
 
 		return this
-
 	}
 
-	insert(data) {
-		for (let key in data) {
-			if (key in this.res) {
-				this.res[key] = data[key];
-			} else {
-				this.error = 0x00; // invalid input data
+	update() {
+		for (let block of this.data.blocks) {
+			if (!block.sent) {
+				block.sent = true
+				this._send(block)
 			}
 		}
-		this.ready = true;
-		this.lui = Che.isNotNull(this.res.lui, "command");
-		this.addTime("Response.insert");
-
-		return this
-
 	}
 
-	denied() {
-		this.insert({
-			data: this.req.com + ": Permission denied",
-			flag: 6,
-			arg: "error"
+	end() {
+		this.update()
+		this.handle.socket.emit('com', {
+			res: this.res,
+			data: null,
+			meta: null
 		});
-		this.lui = "denied";
-		this.addTime("Response.denied");
-		this.send();
 	}
 
-	unknown() {
-		this.insert({
-			data: this.req.com + ": Command not found",
-			flag: 6,
-			arg: "error"
+	_send(block) {
+		this.handle.socket.emit('com', {
+			res: this.res,
+			data: block.data,
+			meta: block.meta
 		});
-		this.lui = "unknown";
-		this.addTime("Response.unknown");
-		this.send();
 	}
-
-	send() {
-		this.addTime("Response.send");
-		this.addTime("Total", process.hrtime(this.start));
-		if (this.ready) {
-			if (!this.sent) {
-				if (!this.error) {
-					this.socket.emit("com", this.res);
-					Exe.log({
-						action: this.lui,
-						udata: this.socket.udata,
-						id: this.socket.id,
-						data: {
-							c: this.req.com,
-							arg: this.req.arg
-						}
-					});
-					this.sent = true;
-					this.error = false;
-					return true
-				} else {
-					this.error = 0x01 // error occured, stop
-					Exe.log({
-						data: "Command send error: " + this.error
-					});
-					return false
-				}
-
-			} else {
-				this.error = 0x02 // res already sent
-				Exe.log({
-					data: "Command send error: " + this.error
-				});
-				return false
-			}
-		} else {
-			this.error = 0x03 // data not ready
-			Exe.log({
-				data: "Command send error: " + this.error
-			});
-			return false
-		}
-	}
-}
-
-class Gen {
-	/**
-	 * Helper Class
-	 * Generate data
-	 * 
-	 */
-
-	static ID(n) {
-		/**
-		 * Generate random base64 string identificator.
-		 * @param n number of charaters in string.
-		 * 
-		 * @returns {string} generatred string
-		 */
-
-		var out = ""
-		var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
-
-		for (var i = 0; i < n; i++)
-			out += chars.charAt(Math.floor(Math.random() * chars.length))
-
-		return out;
-	}
-
-	static date(format) {
-		/**
-		 * Generates current date in specified format
-		 * long - DD/MM/YYYY HH:MM:SS
-		 * log - DD/MMM HH:MM:SS
-		 * @param {string} format date format 
-		 * 
-		 * @returns {string} date in specified format
-		 */
-
-		var d = new Date,
-			out = new String
-
-		switch (format) {
-			default:
-			case 'long':
-				let m = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes()
-				let s = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds()
-				out = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + d.getHours() + ":" + m + ":" + s
-				break;
-			case 'log':
-				let p = new Date().toString().replace(/[A-Z]{3}\+/, '+').split(/ /)
-				out = p[2] + '/' + p[1] + ' ' + p[4]
-				break;
-		}
-
-		return out
-	}
-
-}
-
-class Tra {
-	/**
-	 * Helper Class
-	 * Transform data
-	 *
-	 */
-
-	static escape() {
-		return unsafe
-			.replace(/&/g, "&amp;")
-			.replace(/</g, "&lt;")
-			.replace(/>/g, "&gt;")
-			.replace(/"/g, "&quot;")
-			.replace(/'/g, "&#039;");
-	}
-
-	static multiLine(...arr) {
-		var out = "";
-		for (let key of arr) {
-			out += key.join("\n");
-		}
-		return out;
-	}
-
-	static hrtimeToMs(hrtime) {
-		return hrtime[0] * 1e3 + hrtime[1] / 1e6
-	}
-
-}
-
-class Che {
-	/**
-	 * Helper Class
-	 * Check data
-	 *
-	 */
-
-	static email(email) {
-		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		return re.test(String(email).toLowerCase());
-	}
-
-	static isDefined(...d) {
-
-		for (let key in d) {
-			if (typeof d[key] != "undefined")
-				return d[key]
-		}
-		return undefined
-	}
-
-	static isNotNull(v, d) {
-		if (v == null)
-			return d
-		else
-			return v
-	}
-
-}
-
-class Exe {
-	/**
-	 * Helper Class
-	 * Execute actions
-	 *
-	 */
-
-	static log(obj, lvl) { // log user information //user, session, action, data, ip
-
-		var lvl = Che.isDefined(lvl, 1)
-
-		if (lvl > db.config.verbose) return
-
-		var d = chalk.underline(Gen.date('log')) + ` ${"#".repeat(lvl)} `;
-		if (typeof obj.ip != "undefined") {
-			if (obj.ip == "::1") return
-			obj.ip = obj.ip.slice(7);
-		}
-
-		switch (obj.action) {
-			default:
-				console.log(" --- ");
-				break;
-			case "disconnect":
-				console.log(`${d}${chalk.gray(`${obj.udata.login} ${obj.udata.shortid} --> disconnected`)}`);
-				break;
-
-			case "connect":
-				console.log(`${d}${chalk.gray(`[${obj.udata.ip}] --connected--`)}`);
-				break;
-
-			case "auth":
-				console.log(`${d}${chalk.gray(`[${obj.udata.ip}] --auth--> \'${obj.udata.login}\' \'${obj.udata.shortid}\'`)}`)
-				break;
-
-			case "command":
-				console.log(`${d}\'${obj.udata.login}\' \'${obj.udata.shortid}\' --comm--> \"${obj.data.c} ${obj.data.arg}\"`);
-				break;
-
-			case "denied":
-				console.log(d + chalk.magenta(obj.udata.login + " " + obj.udata.shortid + " !>! " + obj.data.c + " " + obj.data.arg));
-				break;
-
-			case "login":
-				console.log(d + obj.udata.login + " " + obj.udata.shortid + " <-< [" + obj.data.arg[0] + "]");
-				break;
-
-			case "logout":
-				console.log(d + obj.udata.login + " " + obj.udata.shortid + " >-> [guest]");
-				break;
-
-			case "data":
-				if (db.config.dlog)
-					console.log(d + "data -+- " + obj.data);
-				break;
-
-			case "err":
-				console.log(d + "err -!- " + obj.data);
-				break;
-
-			case "info":
-				console.log(d + chalk.red(obj.data));
-				break;
-
-			case "req":
-				switch (parseInt(obj.response.toString()[0])) {
-					case 1: obj.response = chalk.cyan(obj.response); break;
-					case 2: obj.response = chalk.green(obj.response); break;
-					case 3: obj.response = chalk.yellow(obj.response); break;
-					case 4: obj.response = chalk.magenta(obj.response); break;
-					case 5: obj.response = chalk.red(obj.response); break;
-				}
-				console.log(d + obj.type + " " + obj.response + " " + obj.path + " " + obj.ip);
-				break;
-
-			case "unknown":
-				console.log(d + chalk.yellow(obj.udata.login + " " + obj.udata.shortid + " ?>? " + obj.data.c + " " + obj.data.arg));
-				break;
-
-		}
-		Exe.blink();
-	}
-
-	static blink() { // blink the status led
-		cmd.run('python /home/mathias/python/blink.py');
-	}
-
-	static runCommand(req, socket) { // execute sent command
-
-		var response = new Response(req, socket);
-
-		response.addTime("command-execute");
-		if (db.commands[response.req.com]) {
-			response.addTime("permchek");
-			if (db.checkPermissions(response.req, response.socket.udata)) {
-
-				db.commands[response.req.com].f(response, db)
-
-			} else response.denied();
-
-		} else response.unknown();
-
-
-
-
-	}
-
-	static getUptime() {
-
-		var uptime = cmd.get("uptime -p", function (err, data, stderr) {
-			if (err) {
-				throw err
-			} else if (stderr) {
-				throw stderr
-			} else if (data) {
-				db.stats.uptime = data
-			}
-		})
-
-	}
-
 }
 
 function save(file, data) { // save data to file
@@ -938,12 +706,12 @@ function dataparse(data) { // parse data coming from /data
 			if (key != "type") db.stats[key] = obj[key]
 		}
 
-		Exe.log({
+		Functions.log({
 			action: "data",
 			data: "Data recieved succesfully. " + "[Length: " + l + "]"
 		});
 	} catch (e) {
-		Exe.log({
+		Functions.log({
 			action: "err",
 			data: "Invalid JSON string recieved. " + "[Length: " + l + "]"
 		});
@@ -959,14 +727,14 @@ function dataparse(data) { // parse data coming from /data
 	}
 
 	// emto(obj, to)
-	Exe.blink();
+	Functions.blink();
 }
 
 function gpath(dir, arg) { // get path
 
 	var path = [];
 
-	Che.isDefined(arg, "");	// if no user argument replace with empty
+	Functions.isDefined(arg, "");	// if no user argument replace with empty
 
 	if (arg.startsWith("\/")) { // if arg is absolute, dont merge
 		path = arg.slice(1).split("\/");
@@ -1080,6 +848,11 @@ function fsearch(dir, name) {
 	return is
 }
 
+function exit(sig) {
+	console.log(`\n${sig}`)
+	process.exit(0)
+}
+
 // express setup
 app
 	.set('view engine', 'ejs')
@@ -1087,22 +860,20 @@ app
 	.use(bodyParser.json())
 	.use(cookieParser())
 	.use(express.static(path.join(__dirname, 'public')))
+
 	.use(function (req, res, next) {
+		var handle = new Connection({req: req, res: res})
 		res.on("finish", function () {
-			Exe.log({
+			Functions.log({
 				action: "req",
-				type: req.method,
-				response: res.statusCode,
-				path: req.path,
-				ip: req.ip
+				req: req,
+				res: res,
+				handle: handle
 			});
 		});
 		next()
-	});
-
-app.use(function (err, req, res, next) {
-	return res.status(404).send("404");
-});
+	})
+	// .use((err, req, res, next) => res.status(404).render('pages/404.ejs'))
 
 // server setup
 
@@ -1114,6 +885,8 @@ if (conf.cert.enable) {
 	const httpsServer = https.createServer(credentials, app)
 	io.attach(httpsServer)
 }
+
+process.on('SIGINT', exit)
 
 // stdin input listener
 stdin.addListener("data", function (d) {
@@ -1130,7 +903,7 @@ global.db = new DataBase(data);
 
 db.onReady = function () {
 
-	Exe.log({
+	Functions.log({
 		action: "info",
 		data: "DataBase ready"
 	}, 1);
@@ -1145,7 +918,7 @@ db.onReady = function () {
 
 // http standard server
 httpServer.listen(conf.ports.main, function () {
-	Exe.log({
+	Functions.log({
 		action: "info",
 		data: `Server listening on port ${conf.ports.main}`
 	}, 1);
@@ -1153,59 +926,64 @@ httpServer.listen(conf.ports.main, function () {
 
 // https secure server
 if (conf.cert.enable) httpsServer.listen(conf.ports.ssl, function () {
-	Exe.log({
+	Functions.log({
 		action: "info",
 		data: `Server listening on port ${conf.ports.ssl}`
 	}, 1);
 });
 
 // socketio events
-io.on('connection', function (socket) { // connection established event
+io.on('connection', function (socket) {
 
-	// verify user information
-	socket.udata = db.verify({
-		// token: socket.request._query.token,
-		ip: socket.handshake.address,
-		socketid: socket.id
+	var handle = new Connection({socket: socket})
+	db.addConnection(handle)
+	Functions.log({ action: "connect", handle: handle });
+
+	socket.on('disconnect', function () {
+		db.removeConnection(handle)
+		Functions.log({ action: "disconnect", handle: handle });
 	});
 
-	db.addConnection(socket.udata) // add current connection data to online users list
-
-	Exe.log({
-		action: "connect",
-		udata: socket.udata
-	});
-
-	socket.on('disconnect', function () { // connection disconnect event
-		Exe.log({
-			action: "disconnect",
-			udata: socket.udata
-		});
-
-		db.removeConnection(socket.udata);	// remove current connection data from online users list
-
-	});
-
-	socket.on('auth', function (data) { // user command request
-		socket.udata = db.updateConnection(socket.udata, db.verify({
-			token: data ? data.token : undefined,
-			ip: socket.handshake.address,
-			socketid: socket.id
-		}))
-
-		Exe.log({
-			action: "auth",
-			udata: socket.udata
-		});
-
-		socket.emit("auth", socket.udata.userInfo)
-
+	socket.on('auth', function (data) { // user authorization request
+		handle.auth(data)
+		socket.emit("auth", handle.userInfo)
+		Functions.log({ action: "auth", handle: handle });
 	});
 
 	socket.on('com', function (data) { // user command request
-		if (data.dir == "~") data.dir = "\/home\/" + socket.udata.login; // home path translation
+		// if (data.dir == "~") data.dir = "\/home\/" + socket.udata.login; // home path translation
 
-		Exe.runCommand(data, socket); // command execution
+		var com = handle.coms.find(el => el.res.id == data.id)
+
+		if (!com) {
+			com = new Com(data, handle)
+			handle.coms.push(com)
+		}
+
+		if (db.commands[com.req.com]) {
+			
+			if (db.checkPermissions(com.req, handle)) {
+
+				Functions.log({ action: "command", handle: handle, com: com, stat: 0 })
+				db.commands[com.req.com].f(com, db)
+
+			} else {
+				Functions.log({ action: "command", handle: handle, com: com, stat: 2 })
+				com.insert(com.req.com + ": Permission denied", {
+					flag: 6,
+					arg: "error"
+				}).end()
+			}
+
+		} else {
+			Functions.log({ action: "command", handle: handle, com: com, stat: 1 })
+			com.insert({
+				data: com.req.com + ": Command not found"
+			}, {
+				flag: 6,
+				arg: "error"
+			}).end()
+		}
 
 	});
 

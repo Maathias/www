@@ -344,7 +344,7 @@ function download(content, filename) {
 	a.remove()
 }
 
-function toTree(obj, mdepth){
+function toTree(obj, mdepth) {
 	/**
 	 * Creates tree visualization of variable
 	 * @param {any} obj variable to visualize
@@ -515,7 +515,7 @@ function toTree(obj, mdepth){
 
 }
 
-function toTable(content){
+function toTable(content) {
 	/**
 	 * Creates html table from 2D array
 	 * @param {array} content 2d array
@@ -539,7 +539,7 @@ function toTable(content){
 
 }
 
-function toGraph(data, x, y){
+function toGraph(data, x, y) {
 	/**
 	 * Create chart.js graph
 	 * @param {object} data chart.js configuration object
@@ -554,7 +554,7 @@ function toGraph(data, x, y){
 	return `<div class="chartdiv"><canvas id="${id}" width="${isDefined(x, 400)}" height="${isDefined(y, 400)}"></canvas></div><script>var ctx = document.getElementById("${id}").getContext("2d");var myChart = new Chart(ctx, JSON.parse('${JSON.stringify(data)}'));</script>`
 }
 
-function toSyntax(data, lang){
+function toSyntax(data, lang) {
 	/**
 	 * Text syntax highlighting
 	 * @param {string} data text to highlight
@@ -608,6 +608,60 @@ function toSyntax(data, lang){
 	}
 
 	return `<pre><code>${indexed}</code></pre>`*/
+}
+
+function getLocal(key) {
+	return JSON.parse(localStorage.getItem(key))
+}
+
+function setLocal(key, value) {
+	value = JSON.stringify(value)
+	localStorage.setItem(key, value)
+	return value
+}
+
+function getSession(key) {
+	return JSON.parse(sessionStorage.getItem(key))
+}
+
+function setSession(key, value) {
+	value = JSON.stringify(value)
+	sessionStorage.setItem(key, value)
+	return value
+}
+
+function getCookie(key) {
+	var name = key + "=";
+	var decodedCookie = decodeURIComponent(document.cookie);
+	var ca = decodedCookie.split(';');
+	for (var i = 0; i < ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return "";
+}
+
+function setCookie(key, value, exdays) {
+	var d = new Date();
+	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+	var expires = "expires=" + d.toUTCString();
+	document.cookie = key + "=" + value + ";" + expires + ";path=/";
+}
+
+function resource(link){
+	fetch(link)
+		.then(data => {
+			console.log(data)
+			data.text()
+				.then(text => {
+					
+				})
+		})
 }
 
 // function updateInfo(res) {
@@ -961,7 +1015,10 @@ class Elements {
 								.append(
 									$("<span></span>")
 										.addClass('comuser')
-										.append('n/a')
+										.append(
+											$("<txcya></txcya>")
+												.append('guest')
+										)
 								)
 								.append("@")
 								.append(
@@ -1114,7 +1171,7 @@ class Request {
 class Com {
 	constructor(cc, data, con) {
 		this.con = con; // parent Con object
-		this.id = makeID(15); // base64 ID
+		this.id = makeID(5); // base64 ID
 
 		this.cc = cc; // full command from input (string)
 		this.c = data.c; // executed command (string)
@@ -1133,11 +1190,17 @@ class Com {
 		this.req = undefined; // request data
 		this.res = undefined; // server response data
 
+		this.blocks = []
+
 		this.log = this.con.log // log method
+
+		this._append()
+		if(!this._local())
+			this._send()
 	}
 
 	// append Com object to Con.commands
-	append() {
+	_append() {
 		this.$elem = $("<div></div>")
 			.prop("id", this.id)
 			.addClass("command")
@@ -1165,79 +1228,17 @@ class Com {
 							.append(this.cc)
 					)
 			)
+			.append(
+				this.$sr = $("<div></div>")
+					.addClass("sr")
+			)
 			.data("com", this);
 
 		this.con.elements.$commands.append(this.$elem);
 
 	}
 
-	receive(data) {
-
-		this.res = data;
-
-		switch (this.res.flag) {
-			default:
-			case 0: // standard response, append data as plaintext
-				this.formatted = this.res.data;
-				this.insertResponse();
-				break;
-			case 1: // login response
-				var r = this.res.data;
-
-				this.con.auth(this.res.udata);
-
-				setCookie("user", r.user);
-				setCookie("session", r.session);
-
-				if ((r.user == "") && (r.session == ""))
-					this.log('Loged out succesfully', "ok");
-				else
-					this.log('Loged in succesfully', "ok");
-
-				this.insertResponse();
-
-				break;
-			case 2: // silent response, do nothing
-				console.log(data);
-				break;
-			case 4:
-				// this.con.commandAppend(data.data);	// append response to command list
-				break;
-			case 5: // cd response, change dir
-				$(this.con.elements.$commpath).html(data.data);	// append response to command list
-				break;
-			case 6: // log response
-				this.log(this.res.data, this.res.arg);
-				this.insertResponse();
-				break;
-			case 7:
-				// setstyle(data.data);
-				break;
-			case 8: // auth
-				this.con.auth(this.response.data);
-				break;
-			case 9: // toTree
-				this.formatted = toTree(this.res.data);
-
-				this.insertResponse();
-				break;
-			case 10: // toTable
-				this.formatted = toTable(this.res.data);
-				this.insertResponse();
-				break;
-			case 11: // toSyntax
-				this.formatted = toSyntax(this.res.data);
-				this.insertResponse();
-				break;
-			case 12: // ping
-				this.formatted =
-					`${this.res.data} [${Math.floor(((performance.now() - this.time) - this.res.time[this.res.time.length - 1][0]) * 1000) / 1000} ms]`;
-				this.insertResponse();
-				break;
-		}
-	}
-
-	local() {
+	_local() {
 
 		switch (this.c) {
 			default:
@@ -1337,15 +1338,159 @@ class Com {
 
 	}
 
+	_send() {
+		if (this.res) return; // if response is defined, stop
+
+		this._startLoading(); // start loading animation
+		this.req = new Request(this); // create Request object
+
+		this.con.socket.emit("com", this.req); // send Request object
+
+		this.timer = setTimeout(function (com) { // set server timeout
+			com.timeout(false); // call server response timeout
+		}, this.con.timeout, this); // Con.timeout time, Com object
+
+	}
+
+	update(res) {
+		if (res.meta === null && res.data === null) {
+			this._end()
+			return
+		}
+
+		this.con.log(`#${res.res.id} received block`, "info", 3);
+		this.blocks[res.meta.n] = res
+		this._timeout(true)
+
+		var block = $('<div data-n="' + res.meta.n + '"</div>')
+			.append(this._unpack(res)),
+			len = this.$sr.children().length
+
+
+		if (len != 0) {
+			let last = this.$sr.children(`div:lt(${res.meta.n}):last-child`)
+			if (last.length) {
+				last.after(block)
+			} else {
+				let last = this.$sr.children(`div:gt(${res.meta.n}):first-child`)
+				last.after(block)
+			}
+
+		} else {
+			this.$sr.append(block)
+		}
+
+		this.con.scrollBottom(false); // scroll to end of page (non-force)
+	}
+
+	_unpack(res){
+		switch (res.meta.flag) {
+			default:
+			case 0: // standard response, append data as plaintext
+				return res.data
+			case 1: // login response
+				var r = this.res.data;
+
+				this.con.auth(this.res.udata);
+
+				setCookie("user", r.user);
+				setCookie("session", r.session);
+
+				if ((r.user == "") && (r.session == ""))
+					this.log('Loged out succesfully', "ok");
+				else
+					this.log('Loged in succesfully', "ok");
+
+				this.insertResponse();
+
+				break;
+			case 2: // silent response, do nothing
+				console.log(data);
+				break;
+			case 4:
+				// this.con.commandAppend(data.data);	// append response to command list
+				break;
+			case 5: // cd response, change dir
+				$(this.con.elements.$commpath).html(data.data);	// append response to command list
+				break;
+			case 6: // log response
+				this.log(res.data, res.meta.arg);
+				break;
+
+			case 7:
+				// setstyle(data.data);
+				break;
+			case 8: // auth
+				this.con.auth(this.response.data);
+				break;
+			case 9: // toTree
+				return toTree(res.data);
+
+			case 10: // toTable
+				return toTable(res.data);
+
+			case 11: // toSyntax
+				return toSyntax(res.data);
+				
+			case 12: // ping
+				this.formatted =
+					`${this.res.data} [${Math.floor(((performance.now() - this.time) - this.res.time[this.res.time.length - 1][0]) * 1000) / 1000} ms]`;
+				this.insertResponse();
+				break;
+		}
+	}
+
+	_end() {
+		this._stopLoading()
+	}
+
+	_timeout(ok) {
+
+		if (ok) { // server responded
+			if (this.timer) clearTimeout(this.timer); // clear timer
+			this.time = performance.now() - this.time; // calculate response time
+		} else { // server timed-out
+			this.log("Server timeout", "error"); // add error message
+			this.res = null;
+			this.insertResponse();
+		}
+
+	}
+
+
+	insertResponse() {
+
+		this._stopLoading(); // stop loading animation
+
+		if (this.res === null) return; // if response is null (server timed out) stop
+
+		this._timeout(true); // server responded ok
+
+		this.sr = $("<div></div>") // create response element
+			.append(this.formatted)
+			.addClass("sr")
+			.hide()
+
+		this.$elem // append response data to Com element
+			.append(this.sr)
+
+
+		this.sr.slideDown(200); // animate response div
+		this.con.scrollBottom(false); // scroll to end of page (non-force)
+
+	}
+
+	
+
 	remove() {
 		this.$elem.remove();
 	}
 
-	stopLoading() {
+	_stopLoading() {
 		this.$ud.attr("loading", null);
 	}
 
-	startLoading() {
+	_startLoading() {
 		this.$ud.attr("loading", " ");
 		this.time = performance.now()
 	}
@@ -1387,7 +1532,7 @@ class Com {
 		});
 
 		this.arg = obj; // set Com arguments as response object
-		this.send(); // send Com
+		this._send(); // send Com
 
 	}
 
@@ -1401,54 +1546,9 @@ class Com {
 
 	}
 
-	insertResponse() {
+	
 
-		this.stopLoading(); // stop loading animation
-
-		if (this.res === null) return; // if response is null (server timed out) stop
-
-		this.timeout(true); // server responded ok
-
-		this.sr = $("<div></div>") // create response element
-			.append(this.formatted)
-			.addClass("sr")
-			.hide()
-
-		this.$elem // append response data to Com element
-			.append(this.sr)
-
-
-		this.sr.slideDown(200); // animate response div
-		this.con.scrollBottom(false); // scroll to end of page (non-force)
-
-	}
-
-	timeout(ok) {
-
-		if (ok) { // server responded
-			if (this.timer) clearTimeout(this.timer); // clear timer
-			this.time = performance.now() - this.time; // calculate response time
-		} else { // server timed-out
-			this.log("Server timeout", "error"); // add error message
-			this.res = null;
-			this.insertResponse();
-		}
-
-	}
-
-	send() {
-		if (this.res) return; // if response is defined, stop
-
-		this.startLoading(); // start loading animation
-		this.req = new Request(this); // create Request object
-
-		this.con.socket.emit("com", this.req); // send Request object
-
-		this.timer = setTimeout(function (com) { // set server timeout
-			com.timeout(false); // call server response timeout
-		}, this.con.timeout, this); // Con.timeout time, Com object
-
-	}
+	
 }
 
 class Con {
@@ -1505,13 +1605,19 @@ class Con {
 		this.jsond = undefined; // user loaded json data
 		this.timeout = 16000 // Com response waiting time [ms]
 		this.fConnect = false; // first connect event flag
-		this.fAuth = false; // first auth event flag
+		// this.fAuth = false; // first auth event flag
+		this.first = false
 		this.udataExp = false; // auth credentials viability
-		this.verbose = 1; // log display level
+		this.verbose = Config.verbose; // log display level
 
-		// auth credentials
-		this.credentials = {
-			token: getCookie("token")
+		// credentials
+		this.credentials = getLocal('credentials')
+		this.udata = getLocal('udata') || {
+			badge: 'txcya',
+			login: 'guest',
+			group: 9,
+			lastLogin: 'n/a',
+			shortid: undefined
 		}
 
 		// trigger ready event after init
@@ -1521,11 +1627,10 @@ class Con {
 
 	set uAuth(val) {
 
-		this.log(`Auth flag change: ${val}`, "warning", 2);
 		if ((val === true) || (val === false))
 			this.udataExp = val
 
-		if (!val) this.log("User auth data expired", "warning", 2)
+		if (!val) this.log("User auth data expired", "warning", 3)
 
 	}
 
@@ -1537,25 +1642,31 @@ class Con {
 
 	receive(res) {
 
-		this.log(`Received Com #${res.id} data`, "info", 3);
-		this.getCom(res.id).receive(res);
+		this.getCom(res.res.id).update(res);
 
 	}
 
 	auth(udata) {
 
+		con.log("Auth data received", "ok", 2);
 		this.udata = udata;
 		this.uAuth = true;
-		con.log("Auth data received", "ok", 2);
 		this.elements.$commuser.change(this.udata.login, this.udata.badge);
-		if (!this.fAuth) this.firstAuth()
+		// if (!this.fAuth) this.firstAuth()
+		this.motd()
 
 	}
 
 	tryAuth() {
 
-		con.socket.emit("auth", con.credentials);
-		con.log("Requesting authentication", "info", 2);
+		if(con.credentials){
+			con.socket.emit("auth", con.credentials);
+			con.log("Requesting authentication", "info", 2);
+			return true
+		} else {
+			con.log("No credentials found", "info", 2);
+			return false
+		}
 
 	}
 
@@ -1603,7 +1714,7 @@ class Con {
 
 	executeCom(val) {
 
-		this.log(`Force Com execute: ${val}`, "info", 2);
+		this.log(`Force Com execute: ${val}`, "info", 3);
 		this.elements.$commin.val(val);
 		this.commandlineParse();
 
@@ -1695,16 +1806,16 @@ class Con {
 		// 	}
 		// }
 
-		var com = new Com(cc, { c: c, arg: arg }, this);
 
-		this.coms.push(com);
+
+		this.coms.push(new Com(cc, { c: c, arg: arg }, this))
 
 		// if(c=="m") com.content = this.returnError("-> "+arg[0]+": "+arg[1], "message");
-		com.append(); // append executed command to div
+		// com._append(); // append executed command to div
 
-		if (com.local()) return; // local command parsing
+		// if (com.local()) return; // local command parsing
 
-		com.send();
+		// com.send();
 
 	}
 
@@ -1751,28 +1862,6 @@ class Con {
 		this.elements.$commin.focus();
 	}
 
-	// lastCommandUp(){
-	// 	if(this.lc == this.lastc.length-1){
-	// 		this.lc = 0;
-	// 	}else{
-	// 		this.lc++;
-	// 	}
-	// 	this.elements.commin.focus();
-	// 	this.elements.commin.val("");
-	// 	this.elements.commin.val(this.lastc[this.lc]);
-	// }
-	//
-	// lastCommandDown(){
-	// 	if(this.lc==0){
-	// 		this.lc = this.lastc.length-1;
-	// 	}else{
-	// 		this.lc--;
-	// 	}
-	// 	this.elements.commin.focus();
-	// 	this.elements.commin.val("");
-	// 	this.elements.commin.val(this.lastc[this.lc]);
-	// }
-
 	readJson(data) {
 		var file = data.target.files[0];
 		var reader = new FileReader();
@@ -1791,18 +1880,21 @@ class Con {
 
 	}
 
-	firstAuth() {
+	// firstAuth() {
+		
+	// 	this.log("First auth", "info", 3)
+
+	// 	this.fAuth = true;
+	// }
+
+	motd() {
+		if(this.first) return
+		this.first = true
+		this.executeCom("motd");
 		if (location.hash != "") {
 			this.log(`Executing command from URI (${location.hash.slice(1)})`, "info", 3)
 			this.executeCom(decodeURIComponent(location.hash.slice(1)));
 		}
-		this.log("First auth", "info", 3)
-		this.executeCom("connection");
-		this.executeCom("uptime");
-		this.executeCom("stats");
-		this.executeCom("devices");
-
-		this.fAuth = true;
 	}
 
 	// Con init ready event
@@ -1844,7 +1936,8 @@ class Con {
 
 			con.log("Conected to the server", "ok");
 			con.elements.icons.$connection.enable();
-			con.tryAuth();
+			if(!con.tryAuth()) con.motd()
+			else con.log("Credentials detected, waiting for auth before motd", "info", 2)
 
 		});
 
@@ -1926,6 +2019,22 @@ class Con {
 
 		})
 
+		this.elements.$wind.on('keydown', e => {
+			var val = (e.altKey)*1
+				+ (e.ctrlKey)*2
+				+ (e.metaKey)*3
+				+ (e.shiftKey)*4
+				+ e.key,
+				options = {
+					'2l': () => this.clear()
+				}
+
+			if(options[val]){
+				options[val]()
+				e.preventDefault()
+			}
+		})
+
 		// focus on input on 'enter'
 		this.elements.$wind.on("keydown", function (e) {
 			var con = $(this).data("con");
@@ -1984,6 +2093,7 @@ var Config = {
 	treeDepth: 4, // tree visualization Depth
 	socket: undefined, // socket connection object
 	cons: [], // cons list
+	verbose: 2,
 	serviceWorker: false // enable serviceWorker
 }
 
@@ -1991,7 +2101,6 @@ $(document).ready(function () {
 	$("noscript").remove(); // remove 'js disabled' notice
 
 	Config.notif.volume = 0.3; // lower notification volume
-
 	Config.cons.push(new Con()); // init new Con
 	con = Config.cons[0]; // attach main Con to 'con' variable (for easier debugging)
 
