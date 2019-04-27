@@ -3,12 +3,12 @@
   "name": "mathias.ddns.net",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "img/favicon.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "faviconb.png",
+      "src": "img/faviconb.png",
       "type": "image/png",
       "sizes": "512x512"
     }
