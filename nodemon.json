@@ -1,4 +1,4 @@
 {
   "verbose": true,
-  "ignore": ["main.js", "logs", "db.json"]
+  "ignore": ["main.js", "logs", "db.json", "public/packages/*"]
 }

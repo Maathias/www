@@ -1,186 +1,3 @@
-class H {
-	constructor(type) {
-		if ((typeof type != 'string') && (typeof type != 'object')) {
-			throw new Error('invalid object type')
-		}
-
-		if (type instanceof Node)
-			this.element = [type]
-		else if (type instanceof NodeList)
-			this.element = type
-		else
-			this.element = [document.createElement(type)]
-	}
-
-	addClass(...classNames) {
-		for (let key of classNames) {
-			for (let e of this.element) {
-				if (e.classList)
-					e.classList.add(key);
-				else
-					e.className += ' ' + key;
-			}
-
-		}
-		return this
-	}
-
-	removeClass(...classNames) {
-		for (let key of classNames) {
-			for (let e of this.element) {
-				if (e.classList)
-					e.classList.remove(key);
-				else
-					e.className = e.className.replace(new RegExp(`\\b${key}\\b`), "");
-			}
-
-		}
-		return this
-	}
-
-	setProp(properties) {
-		for (let prop in properties) {
-			for (let e of this.element) {
-				e.setAttribute(prop, properties[prop])
-			}
-		}
-		return this
-	}
-
-	append(...children) {
-		for (let child of children) {
-			var content = typeof child == 'string' ? document.createTextNode(child) : (child instanceof H ? child.element : child)
-			if (!(content instanceof Node)) {
-				if ((content instanceof NodeList) || (content instanceof Array)) {
-					for (var e of this.element) {
-						for (var se of content) {
-							e.appendChild(se)
-						}
-					}
-					continue
-				} else
-					throw new Error("Invalid input argument")
-			}
-
-			for (let e of this.element) {
-				e.appendChild(content)
-			}
-
-		}
-		return this
-	}
-
-	remove() {
-		this.element.forEach(e => {
-			e.parentNode.removeChild(e)
-		})
-	}
-
-	siblings() {
-
-		var siblings = []
-
-		for (let e of this.element) {
-			var sibling = e.parentNode.firstChild;
-
-			// Loop through each sibling and push to the array
-			while (sibling) {
-				if (sibling.nodeType === 1 && sibling !== e) {
-					siblings.push(sibling);
-				}
-				sibling = sibling.nextSibling
-			}
-		}
-
-		return siblings;
-	};
-
-	data(obj) {
-		if (typeof obj == 'string') {
-			return this.element[0].dataset[obj]
-		}
-		for (let key in obj) {
-			this.element[0].dataset[key] = obj[key]
-		}
-		return this
-	}
-
-	ready(fn) {
-		document.addEventListener('DOMContentLoaded', fn, false);
-	}
-
-	on(e, t, f) {
-		switch (arguments.length) {
-			default:
-			case 1: throw new Error("Invalid arguments set")
-			case 2:
-				var ename = arguments[0],
-					target = '*',
-					fn = arguments[1]
-				break
-			case 3:
-				var ename = arguments[0],
-					target = arguments[1]
-				fn = arguments[2]
-				break
-		}
-
-		for (let e of this.element) {
-			e.addEventListener(ename, e => {
-				if (e.target.matches(target))
-					fn()
-			});
-		}
-
-		return this
-
-	}
-
-	static sel(selector) {
-		if (selector instanceof Node) return new H(selector)
-		return new H(document.querySelectorAll(selector))
-	}
-}
-
-function getCookie(cname) {
-	/**
-	 * Get cookie
-	 * @param {string} cname cookie name
-	 * 
-	 * @returns {string} cookie content (undefined if doesn't exist)
-	 */
-
-	var name = cname + "=";
-	var decodedCookie = decodeURIComponent(document.cookie);
-	var ca = decodedCookie.split(';');
-	for (var i = 0; i < ca.length; i++) {
-		var c = ca[i];
-		while (c.charAt(0) == ' ') {
-			c = c.substring(1);
-		}
-		if (c.indexOf(name) == 0)
-			return c.substring(name.length, c.length);
-
-	}
-	return undefined;
-}
-
-function setCookie(cname, cvalue, exdays) {
-	/**
-	 * Set cookie
-	 * @param cname cookie name
-	 * @param cvalue cookie value
-	 * @param exdays cookie expiry in days
-	 * 
-	 * @returns {undefined}
-	 */
-
-	var d = new Date();
-	isDefined(exdays, 3650);
-	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-	document.cookie = cname + "=" + cvalue + ";expires=" + d.toUTCString() + ";path=/";
-}
-
 // function escapeh(unsafe) {
 // 	if (typeof unsafe != "string") return unsafe;
 // 	return unsafe
@@ -307,6 +124,50 @@ function makeID(n) {
 		out += chars.charAt(Math.floor(Math.random() * chars.length));
 
 	return out;
+}
+
+function date(format) {
+	/**
+	 * thiserates current date in specified format
+	 * long - DD/MM/YYYY HH:MM:SS
+	 * log - DD/MMM HH:MM:SS
+	 * tiny - MM:SS,SSS
+	 * @param {string} format date format 
+	 * 
+	 * @returns {string} date in specified format
+	 */
+
+	var d = new Date,
+		out = new String,
+		h = d.getHours() < 10 ? "0" + d.getHours() : d.getHours(),
+		m = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes(),
+		s = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds(),
+		ms = (function () {
+			let ms = d.getMilliseconds()
+			return ms < 10 ? '00' + ms : (ms < 100 ? '0' + ms : ms)
+		})()
+
+	switch (format) {
+		default:
+		case 'long':
+			out = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + d.getHours() + ":" + m + ":" + s
+			break;
+		case 'log':
+			let p = new Date().toString().replace(/[A-Z]{3}\+/, '+').split(/ /)
+			out = p[2] + '/' + p[1] + ' ' + p[4]
+			break;
+		case 'tiny':
+			out = `${h}:${m}:${s}.${ms}`
+			break;
+	}
+
+	return out
+}
+
+function timestamp() {
+	return $('<txdrk></txdrk>')
+		.addClass('timestamp')
+		.append(date('tiny') + ' ')
 }
 
 function download(content, filename) {
@@ -630,36 +491,13 @@ function setSession(key, value) {
 	return value
 }
 
-function getCookie(key) {
-	var name = key + "=";
-	var decodedCookie = decodeURIComponent(document.cookie);
-	var ca = decodedCookie.split(';');
-	for (var i = 0; i < ca.length; i++) {
-		var c = ca[i];
-		while (c.charAt(0) == ' ') {
-			c = c.substring(1);
-		}
-		if (c.indexOf(name) == 0) {
-			return c.substring(name.length, c.length);
-		}
-	}
-	return "";
-}
-
-function setCookie(key, value, exdays) {
-	var d = new Date();
-	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-	var expires = "expires=" + d.toUTCString();
-	document.cookie = key + "=" + value + ";" + expires + ";path=/";
-}
-
-function resource(link){
+function resource(link) {
 	fetch(link)
 		.then(data => {
 			console.log(data)
 			data.text()
 				.then(text => {
-					
+
 				})
 		})
 }
@@ -1043,17 +881,17 @@ class Elements {
 								.prop("spellcheck", false)
 								.prop("autofocus", true)
 						)
-						.append(
-							$("<span></span>")
-								.addClass("icons")
-								.append(
-									$("<i></i>").addClass("icon-volume-up"),
-									$("<i></i>").addClass("icon-lock-open"),
-									$("<i></i>").addClass("icon-trash"),
-									$("<i></i>").addClass("icon-level-down"),
-									$("<i></i>").addClass("icon-unlink")
-								)
-						)
+						// .append(
+						// 	$("<span></span>")
+						// 		.addClass("icons")
+						// 		.append(
+						// 			$("<i></i>").addClass("icon-volume-up"),
+						// 			$("<i></i>").addClass("icon-lock-open"),
+						// 			$("<i></i>").addClass("icon-trash"),
+						// 			$("<i></i>").addClass("icon-level-down"),
+						// 			$("<i></i>").addClass("icon-unlink")
+						// 		)
+						// )
 				)
 			$("body").append($wind);
 		}
@@ -1066,74 +904,74 @@ class Elements {
 		this.$commin = $wind.children(".commline").children(".commin");
 		this.$jsonl = $wind.children(".jsonl");
 
-		this.$commin.on("blur", function () {
-			if ($(this).closest(".wind").data("con").scroll) {
-				this.focus();
-			}
-		})
+		// this.$commin.on("blur", function () {
+		// 	if ($(this).closest(".wind").data("con").scroll) {
+		// 		this.focus();
+		// 	}
+		// })
 
 		var icons = $wind.children(".commline").children(".icons");
 
-		this.icons = {};
+		// this.icons = {};
 
-		this.icons.$trash = icons.children("i.icon-trash");
-		this.icons.$trash.on("click", function () {
-			$(this).closest(".wind").data("con").clear();
-		})
+		// this.icons.$trash = icons.children("i.icon-trash");
+		// this.icons.$trash.on("click", function () {
+		// 	$(this).closest(".wind").data("con").clear();
+		// })
 
-		this.icons.$levelDown = icons.children("i.icon-level-down");
-		this.icons.$levelDown.on("click", function () {
-			$(this).closest(".wind").data("con").scrollBottom(true);
-		})
+		// this.icons.$levelDown = icons.children("i.icon-level-down");
+		// this.icons.$levelDown.on("click", function () {
+		// 	$(this).closest(".wind").data("con").scrollBottom(true);
+		// })
 
-		this.icons.$volume = icons.children("i.icon-volume-up");
+		// this.icons.$volume = icons.children("i.icon-volume-up");
 
-		this.icons.$lock = icons.children("i.icon-lock-open");
-		this.icons.$lock.change = function () {
-			var con = $wind.data("con")
-			if (!con.scroll) {
-				this.removeClass();
-				this.addClass("icon-lock-open");
-				con.scroll = true;
-				con.elements.$commin.focus();
-			} else {
-				this.removeClass();
-				this.addClass("icon-lock");
-				con.scroll = false;
-			}
-		}
-		this.icons.$lock.on("click", function () {
-			$(this).closest(".wind").data("con").elements.icons.$lock.change();
-		});
+		// this.icons.$lock = icons.children("i.icon-lock-open");
+		// this.icons.$lock.change = function () {
+		// 	var con = $wind.data("con")
+		// 	if (!con.scroll) {
+		// 		this.removeClass();
+		// 		this.addClass("icon-lock-open");
+		// 		con.scroll = true;
+		// 		con.elements.$commin.focus();
+		// 	} else {
+		// 		this.removeClass();
+		// 		this.addClass("icon-lock");
+		// 		con.scroll = false;
+		// 	}
+		// }
+		// this.icons.$lock.on("click", function () {
+		// 	$(this).closest(".wind").data("con").elements.icons.$lock.change();
+		// });
 
-		this.icons.$connection = icons.children("i.icon-unlink");
-		this.icons.$connection.blink = function () {
-			this.addClass("txgrn glow");
-			setTimeout(function (icon) {
-				icon.removeClass("txgrn glow");
-			}, 200, this);
-		}
-		this.icons.$connection.on("click", function () {
-			$(this).closest(".wind").data("con").executeCom("connection");
-		})
+		// this.icons.$connection = icons.children("i.icon-unlink");
+		// this.icons.$connection.blink = function () {
+		// 	this.addClass("txgrn glow");
+		// 	setTimeout(function (icon) {
+		// 		icon.removeClass("txgrn glow");
+		// 	}, 200, this);
+		// }
+		// this.icons.$connection.on("click", function () {
+		// 	$(this).closest(".wind").data("con").executeCom("connection");
+		// })
 
-		this.icons.$lock.enable = function () {
-			this.removeClass();
-			this.addClass("icon-lock-closed");
-		}
-		this.icons.$lock.disable = function () {
-			this.removeClass();
-			this.addClass("icon-lock");
-		}
+		// this.icons.$lock.enable = function () {
+		// 	this.removeClass();
+		// 	this.addClass("icon-lock-closed");
+		// }
+		// this.icons.$lock.disable = function () {
+		// 	this.removeClass();
+		// 	this.addClass("icon-lock");
+		// }
 
-		this.icons.$connection.enable = function () {
-			this.removeClass();
-			this.addClass("icon-link");
-		}
-		this.icons.$connection.disable = function () {
-			this.removeClass();
-			this.addClass("icon-unlink");
-		}
+		// this.icons.$connection.enable = function () {
+		// 	this.removeClass();
+		// 	this.addClass("icon-link");
+		// }
+		// this.icons.$connection.disable = function () {
+		// 	this.removeClass();
+		// 	this.addClass("icon-unlink");
+		// }
 
 		this.$commline = $wind.children(".commline");
 		this.$commline.enable = function () {
@@ -1163,7 +1001,6 @@ class Request {
 		this.id = com.id;
 		this.con = com.con.id;
 		this.udata = com.con.udata;
-
 	}
 
 }
@@ -1195,16 +1032,16 @@ class Com {
 		this.log = this.con.log // log method
 
 		this._append()
-		if(!this._local())
+		if (!this._local())
 			this._send()
 	}
 
-	// append Com object to Con.commands
 	_append() {
 		this.$elem = $("<div></div>")
 			.prop("id", this.id)
 			.addClass("command")
 			.append(
+				timestamp(),
 				this.$ud = $("<span></span>")
 					.addClass("ud")
 					.append(
@@ -1242,7 +1079,7 @@ class Com {
 
 		switch (this.c) {
 			default:
-				if (this.con.socket.connected != true) {
+				if (this.con.Socket.socket.connected != true) {
 					this.log("socket disconnected", "error");
 					this.insertResponse();
 					return 1;
@@ -1344,7 +1181,7 @@ class Com {
 		this._startLoading(); // start loading animation
 		this.req = new Request(this); // create Request object
 
-		this.con.socket.emit("com", this.req); // send Request object
+		this.con.Socket.socket.emit("com", this.req); // send Request object
 
 		this.timer = setTimeout(function (com) { // set server timeout
 			com.timeout(false); // call server response timeout
@@ -1383,7 +1220,7 @@ class Com {
 		this.con.scrollBottom(false); // scroll to end of page (non-force)
 	}
 
-	_unpack(res){
+	_unpack(res) {
 		switch (res.meta.flag) {
 			default:
 			case 0: // standard response, append data as plaintext
@@ -1414,7 +1251,7 @@ class Com {
 				$(this.con.elements.$commpath).html(data.data);	// append response to command list
 				break;
 			case 6: // log response
-				this.log(res.data, res.meta.arg);
+				this.log(res.data.data, res.meta.arg);
 				break;
 
 			case 7:
@@ -1431,7 +1268,7 @@ class Com {
 
 			case 11: // toSyntax
 				return toSyntax(res.data);
-				
+
 			case 12: // ping
 				this.formatted =
 					`${this.res.data} [${Math.floor(((performance.now() - this.time) - this.res.time[this.res.time.length - 1][0]) * 1000) / 1000} ms]`;
@@ -1457,7 +1294,6 @@ class Com {
 
 	}
 
-
 	insertResponse() {
 
 		this._stopLoading(); // stop loading animation
@@ -1469,18 +1305,16 @@ class Com {
 		this.sr = $("<div></div>") // create response element
 			.append(this.formatted)
 			.addClass("sr")
-			.hide()
+		// .hide()
 
 		this.$elem // append response data to Com element
 			.append(this.sr)
 
 
-		this.sr.slideDown(200); // animate response div
+		// this.sr.slideDown(200); // animate response div
 		this.con.scrollBottom(false); // scroll to end of page (non-force)
 
 	}
-
-	
 
 	remove() {
 		this.$elem.remove();
@@ -1545,10 +1379,6 @@ class Com {
 		this.con.elements.$commline.enable(); // enable commline
 
 	}
-
-	
-
-	
 }
 
 class Con {
@@ -1556,7 +1386,6 @@ class Con {
 	constructor($wind) {
 
 		this.id = makeID(6) // Con ID
-		this.socket = undefined; // socket connection object
 		this.elements = new Elements($wind); // DOM elements object
 
 		// commands input history
@@ -1607,7 +1436,6 @@ class Con {
 		this.fConnect = false; // first connect event flag
 		// this.fAuth = false; // first auth event flag
 		this.first = false
-		this.udataExp = false; // auth credentials viability
 		this.verbose = Config.verbose; // log display level
 
 		// credentials
@@ -1620,53 +1448,10 @@ class Con {
 			shortid: undefined
 		}
 
-		// trigger ready event after init
-		$($wind).ready(this.ready());
-
-	}
-
-	set uAuth(val) {
-
-		if ((val === true) || (val === false))
-			this.udataExp = val
-
-		if (!val) this.log("User auth data expired", "warning", 3)
-
-	}
-
-	get uAuth() {
-
-		return this.udataExp
-
-	}
-
-	receive(res) {
-
-		this.getCom(res.res.id).update(res);
-
-	}
-
-	auth(udata) {
-
-		con.log("Auth data received", "ok", 2);
-		this.udata = udata;
-		this.uAuth = true;
-		this.elements.$commuser.change(this.udata.login, this.udata.badge);
-		// if (!this.fAuth) this.firstAuth()
-		this.motd()
-
-	}
-
-	tryAuth() {
-
-		if(con.credentials){
-			con.socket.emit("auth", con.credentials);
-			con.log("Requesting authentication", "info", 2);
-			return true
-		} else {
-			con.log("No credentials found", "info", 2);
-			return false
-		}
+		$(this.$wind).ready(()=>{
+			this._ready()
+		});
+		// this._ready()
 
 	}
 
@@ -1740,6 +1525,7 @@ class Con {
 		var out = $("<div></div>")
 			.addClass('inline')
 			.append(
+				timestamp(),
 				$('<tx></tx>')
 					.addClass(opt[0])
 					.append("#".repeat(lvl))
@@ -1852,13 +1638,7 @@ class Con {
 	}
 
 	commandHistory(key) {
-		// if(key==38)
-		// 	this.elements.commin.val(this.history.up);
-		// else if(key==40)
-		// 	this.elements.commin.val(this.history.down);
-
 		this.elements.$commin.val(key == 38 ? this.history.up : (key == 40 ? this.history.down : ""));
-
 		this.elements.$commin.focus();
 	}
 
@@ -1880,107 +1660,76 @@ class Con {
 
 	}
 
-	// firstAuth() {
-		
-	// 	this.log("First auth", "info", 3)
+	_getPackage(name) {
+		return new Promise((resolve, reject) => {
 
-	// 	this.fAuth = true;
-	// }
+			this.log(`Requesting ${name} module`, 'info')
+			import(`./packages/${name}.js`)
+				.then(mod => {
+					this.log(`Downloaded ${name} module`, 'ok')
+					console.log(mod)
+					switch(mod.type){
+						case 'sub':
+							this[name] = new mod.default(this)
+							break;
+						case 'class':
+							this[name] = mod.default
+							break;
+					}
+					resolve()
+				})
+				.catch(err => {
+					this.log(`Downloading ${name} module failed: ${err}`, 'error')
 
-	motd() {
-		if(this.first) return
-		this.first = true
-		this.executeCom("motd");
-		if (location.hash != "") {
-			this.log(`Executing command from URI (${location.hash.slice(1)})`, "info", 3)
-			this.executeCom(decodeURIComponent(location.hash.slice(1)));
-		}
+					reject()
+				})
+
+
+			// var tag = document.createElement('script')
+			// tag.src = `packages/${name}.js`
+
+			// Config.packages.update(name, 'downloading')
+
+
+			// $(tag).ready(() => {
+			// 	Config.packages.update(name, 'downloaded')
+			// 	resolve()
+			// if (eval(`if(typeof ${name} != 'undefined')true;else false`)) {
+
+			// 	this.log(`${name} package downloaded`, 'ok')
+			// 	resolve()
+			// } else {
+			// 	Config.packages.update(name, 'failed')
+			// 	this.log(`${name} package download failed`, 'error')
+			// 	reject()
+			// }
+			// })
+			// $('head').append(tag)
+		});
 	}
 
-	// Con init ready event
-	ready() {
+	_requires(name) {
+		if(!Config.packages[name])
+			Config.packages[name] = this._getPackage(name)
 
+		return Config.packages[name]
+		// return new Promise((resolve, reject) => {
+		// 	if (Config.packages.check(name) == 'undefined')
+		// 		this._getPackage(name)
+		// 	else resolve()
+
+		// 	Config.packages.callback(name)
+		// 		.then(() => {
+		// 			this[name] = eval(`new ${name}(this)`)
+		// 			resolve()
+		// 		})
+		// })
+	}
+
+
+	_ready() {
 		$(this.elements.$wind).prop("id", this.id); // attach Con id to DOM
 		$(this.elements.$wind).data("con", this); // attach Con object to DOM
-
-		this.socket = io('/'); // new socket connection
-
-		// socket event register function modification (pass additional parameter)
-		this.socket.originalOn = this.socket.on;
-		this.socket.on = function (event, data, callback) {
-			return this.originalOn.call(this, event, (e) => callback(e, data));
-		};
-
-		// socket connecting start event
-		this.socket.on('connecting', this, function (data, con) {
-			con.log("Conecting...", "info", 2);
-
-		});
-
-		// socket disconnected event
-		this.socket.on("disconnect", this, function (data, con) {
-			con.log(`Disconnected from server: ${data}`, "warning");
-			con.elements.icons.$connection.disable();
-			con.uAuth = false
-
-		})
-
-		// socket connection error event
-		this.socket.on("connect_error", this, function (data, con) {
-			con.log(data, "error");
-
-		})
-
-		// socket succesfully connected event
-		this.socket.on('connect', this, function (data, con) {
-
-			con.log("Conected to the server", "ok");
-			con.elements.icons.$connection.enable();
-			if(!con.tryAuth()) con.motd()
-			else con.log("Credentials detected, waiting for auth before motd", "info", 2)
-
-		});
-
-		// dynamic (refreshed) data update
-		this.socket.on("dynamic", this, function (data, con) {
-			con.elements.icons.$connection.blink();
-			console.log(data)
-			// /ChangeDom.updateInfo(data);
-
-		})
-
-		// message broadcast (private & public) event
-		this.socket.on("broadcast", this, function (data, con) {
-			con.elements.icons.$connection.blink();
-			con.log(data.data, "message");
-			con.m = data.frm;
-			con.scrollBottom(true);
-			if (data.imp) alert("Broadcast message received");
-			notif.play();
-			con.m = data.frm;
-
-		})
-
-		// remote execute event
-		this.socket.on("eval", this, function (data, con) {
-			con.elements.icons.$connection.blink();
-			$("head").append(eval(data.data));
-
-		})
-
-		// socket receive auth data event
-		this.socket.on('auth', this, function (res, con) {
-			con.elements.icons.$connection.blink();
-			con.auth(res);
-
-		});
-
-		// socket receive com response event
-		this.socket.on('com', this, function (res, con) {
-			con.elements.icons.$connection.blink();
-			con.receive(res);
-
-		});
 
 		// command input key handling
 		this.elements.$commline.on("keydown", "input", function (e) {
@@ -2020,32 +1769,32 @@ class Con {
 		})
 
 		this.elements.$wind.on('keydown', e => {
-			var val = (e.altKey)*1
-				+ (e.ctrlKey)*2
-				+ (e.metaKey)*3
-				+ (e.shiftKey)*4
+			var val = (e.altKey) * 1
+				+ (e.ctrlKey) * 2
+				+ (e.metaKey) * 3
+				+ (e.shiftKey) * 4
 				+ e.key,
 				options = {
 					'2l': () => this.clear()
 				}
 
-			if(options[val]){
+			if (options[val]) {
 				options[val]()
 				e.preventDefault()
 			}
 		})
 
-		// focus on input on 'enter'
-		this.elements.$wind.on("keydown", function (e) {
-			var con = $(this).data("con");
+		// // focus on input on 'enter'
+		// this.elements.$wind.on("keydown", function (e) {
+		// 	var con = $(this).data("con");
 
-			switch (e.which) {
-				// ENTER key
-				case 13: con.elements.$commin.focus(); // focus on input
-					break;
-			}
+		// 	switch (e.which) {
+		// 		// ENTER key
+		// 		case 13: con.elements.$commin.focus(); // focus on input
+		// 			break;
+		// 	}
 
-		})
+		// })
 
 		// form key handling
 		this.elements.$commands.on("keydown", "form", function (e) {
@@ -2075,24 +1824,60 @@ class Con {
 		// jsonl file input event listener
 		this.elements.$jsonl[0].addEventListener('change', this.readJson, false);
 
-		// 'accept cookies' prompt
-		if (typeof getCookie("cookies") == "undefined") {
-			setCookie("cookies", "1");
-			this.log("This site uses cookies. By continuing, you agree to our use of cookies. <a target = '_blank' href='http://wikipedia.org/wiki/HTTP_cookie'>Learn more</a>", "warning")
-		}
+		// // 'accept cookies' prompt
+		// if (typeof getCookie("cookies") == "undefined") {
+		// 	setCookie("cookies", "1");
+		// 	this.log("This site uses cookies. By continuing, you agree to our use of cookies. <a target = '_blank' href='http://wikipedia.org/wiki/HTTP_cookie'>Learn more</a>", "warning")
+		// }
 
 		// update input width // TODO: get this working in pure css
 		this.updateInputWidth();
+
+		this.log("Console ready", 'ok')
+
+		this._requires("Socket")
 
 	}
 
 }
 
 var Config = {
-	notif: new Audio('unsure.mp3'), // notification sound object
+	notif: new Audio('res/unsure.mp3'), // notification sound object
 	treeDepth: 4, // tree visualization Depth
 	socket: undefined, // socket connection object
 	cons: [], // cons list
+	packages: {},
+	// packages: {
+	// 	list: {},
+	// 	update(name, state) {
+	// 		if (this.list[name]) {
+	// 			this.list[name].state = state
+	// 		} else {
+	// 			this.list[name] = {
+	// 				state: state,
+	// 				callbacks: []
+	// 			}
+	// 		}
+
+	// 		if (state == 'ready') {
+	// 			for (let fs of this.list[name].callbacks) {
+	// 				fs[0]()
+	// 			}
+	// 		} else if (state == 'failed') {
+	// 			for (let fs of this.list[name].callbacks) {
+	// 				fs[1]()
+	// 			}
+	// 		}
+	// 	},
+	// 	callback(name, f) {
+	// 		return new Promise((resolve, reject) => {
+	// 			this.list[name].callbacks.push([resolve, reject])
+	// 		})
+	// 	},
+	// 	check(name) {
+	// 		return typeof this.list[name] != 'undefined' ? this.list[name].state : 'undefined'
+	// 	}
+	// },
 	verbose: 2,
 	serviceWorker: false // enable serviceWorker
 }
@@ -2100,9 +1885,9 @@ var Config = {
 $(document).ready(function () {
 	$("noscript").remove(); // remove 'js disabled' notice
 
-	Config.notif.volume = 0.3; // lower notification volume
-	Config.cons.push(new Con()); // init new Con
-	con = Config.cons[0]; // attach main Con to 'con' variable (for easier debugging)
+	Config.notif.volume = 0.3
+	Config.cons.push(new Con())
+	con = Config.cons[0]
 
 	if ('serviceWorker' in navigator && Config.serviceWorker) { // check is serviceWorker is available
 		navigator.serviceWorker

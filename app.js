@@ -38,7 +38,7 @@ const dependencies = [
 	['bodyParser', 'body-parser'],
 	'path',
 	'fs',
-	'node-cmd',
+	['cmd', 'node-cmd'],
 	['cookieParser', 'cookie-parser'],
 	'http', 'https',
 	['socket', 'socket.io'],
@@ -54,7 +54,6 @@ for(let dep of dependencies){
 	Functions.log({ action: 'info', data: `Loading '${name}' module` })
 }
 
-
 // other
 const
 	app = express(),
@@ -66,14 +65,6 @@ const
 			pass: conf.mail.pass
 		}
 	})
-
-// // ssl credentials
-// if (conf.cert.key && conf.cert.crt && conf.cert.ca && conf.cert.enable)
-// 	credentials = {
-// 		key: fs.readFileSync(conf.cert.key, 'utf8'),
-// 		cert: fs.readFileSync(conf.cert.crt, 'utf8'),
-// 		ca: fs.readFileSync(conf.cert.ca, 'utf8')
-// 	}
 
 class DataBase {
 
@@ -686,172 +677,167 @@ class Com {
 	}
 }
 
-function save(file, data) { // save data to file
-	fs.writeFile(file, data, function (err) {
-		if (err) {
-			console.log(err);
-			return err;
-		} else {
-			return true;
-		}
-	});
-	return true;
-}
+// function save(file, data) { // save data to file
+// 	fs.writeFile(file, data, function (err) {
+// 		if (err) {
+// 			console.log(err);
+// 			return err;
+// 		} else {
+// 			return true;
+// 		}
+// 	});
+// 	return true;
+// }
 
-function dataparse(data) { // parse data coming from /data
-	l = data.length;
-	try {
-		obj = JSON.parse(data);
-		for (let key in obj) {
-			if (key != "type") db.stats[key] = obj[key]
-		}
+// function dataparse(data) { // parse data coming from /data
+// 	l = data.length;
+// 	try {
+// 		obj = JSON.parse(data);
+// 		for (let key in obj) {
+// 			if (key != "type") db.stats[key] = obj[key]
+// 		}
 
-		Functions.log({
-			action: "data",
-			data: "Data recieved succesfully. " + "[Length: " + l + "]"
-		});
-	} catch (e) {
-		Functions.log({
-			action: "err",
-			data: "Invalid JSON string recieved. " + "[Length: " + l + "]"
-		});
-	}
+// 		Functions.log({
+// 			action: "data",
+// 			data: "Data recieved succesfully. " + "[Length: " + l + "]"
+// 		});
+// 	} catch (e) {
+// 		Functions.log({
+// 			action: "err",
+// 			data: "Invalid JSON string recieved. " + "[Length: " + l + "]"
+// 		});
+// 	}
 
-	var to = 0
-	switch (obj.type) {
-		default: to = 0; break;
-		case "stats":
-		case "uptime": to = 9; break;
+// 	var to = 0
+// 	switch (obj.type) {
+// 		default: to = 0; break;
+// 		case "stats":
+// 		case "uptime": to = 9; break;
 
-		case "network": to = 0; break;
-	}
+// 		case "network": to = 0; break;
+// 	}
 
-	// emto(obj, to)
-	Functions.blink();
-}
+// 	// emto(obj, to)
+// 	Functions.blink();
+// }
 
-function gpath(dir, arg) { // get path
+// function gpath(dir, arg) { // get path
 
-	var path = [];
+// 	var path = [];
 
-	Functions.isDefined(arg, "");	// if no user argument replace with empty
+// 	Functions.isDefined(arg, "");	// if no user argument replace with empty
 
-	if (arg.startsWith("\/")) { // if arg is absolute, dont merge
-		path = arg.slice(1).split("\/");
-	} else { // if arg is relative, merge
-		if (!dir.startsWith("/")) dir = "/" + dir;
-		path = (dir + "/" + arg).slice(1).split("\/");
-	}
+// 	if (arg.startsWith("\/")) { // if arg is absolute, dont merge
+// 		path = arg.slice(1).split("\/");
+// 	} else { // if arg is relative, merge
+// 		if (!dir.startsWith("/")) dir = "/" + dir;
+// 		path = (dir + "/" + arg).slice(1).split("\/");
+// 	}
 
-	while (path.indexOf("..") != -1) { // remove realtive paths (..)
-		if (path.indexOf("..") == 0) { // stop on empty
-			path = [""];
-			break;
-		}
-		z = path.indexOf(".."); // get index of (..)
-		b = path.slice(0, z - 1); // get first half of path, without one stepdown
-		c = path.slice(z + 1); // get second half, without (..)
-		path = b.concat(c); // concat halves
-	}
+// 	while (path.indexOf("..") != -1) { // remove realtive paths (..)
+// 		if (path.indexOf("..") == 0) { // stop on empty
+// 			path = [""];
+// 			break;
+// 		}
+// 		z = path.indexOf(".."); // get index of (..)
+// 		b = path.slice(0, z - 1); // get first half of path, without one stepdown
+// 		c = path.slice(z + 1); // get second half, without (..)
+// 		path = b.concat(c); // concat halves
+// 	}
 
-	if (path[path.length - 1] == "") path.splice(-1, 1); //remove empty dir at end
-	if (path[0] != "") path.unshift("");  // if no root path, add at beginning
-	if (path.length == 0) path.push(""); // if empty, add root dir
+// 	if (path[path.length - 1] == "") path.splice(-1, 1); //remove empty dir at end
+// 	if (path[0] != "") path.unshift("");  // if no root path, add at beginning
+// 	if (path.length == 0) path.push(""); // if empty, add root dir
 
-	return path
-}
+// 	return path
+// }
 
-function gdir(path) { // get directory
-	if ((path.length == 0) || (path[0] == "")) {
-		obj = filess;
-	}
-	// else
-	// if(typeof(filess[path[0]]!="undefined")){
-	// 	obj = filess[path[0]];
-	// }
+// function gdir(path) { // get directory
+// 	if ((path.length == 0) || (path[0] == "")) {
+// 		obj = filess;
+// 	}
+// 	// else
+// 	// if(typeof(filess[path[0]]!="undefined")){
+// 	// 	obj = filess[path[0]];
+// 	// }
 
-	for (i = 1; i < path.length; i++) {
-		if (obj == null) break;
-		if (typeof obj[path[i]] != "undefined") {
-			if (typeof obj[path[i]] != "object") {
-				obj = null
-			} else obj = obj[path[i]]
-		} else obj = null
-	}
-	return obj;
-}
+// 	for (i = 1; i < path.length; i++) {
+// 		if (obj == null) break;
+// 		if (typeof obj[path[i]] != "undefined") {
+// 			if (typeof obj[path[i]] != "object") {
+// 				obj = null
+// 			} else obj = obj[path[i]]
+// 		} else obj = null
+// 	}
+// 	return obj;
+// }
 
-function sfile(path, socket, id) { // get file
-	obj = gdir(path.slice(0, path.length - 1));
-	if (obj == null) {
-		coms({
-			data: "err: invalid directory",
-			arg: [],
-			flag: 0,
-			id: id
-		}, socket);
-		return null;
-	}
-	if (typeof obj[path[path.length - 1]] == "undefined") {
-		coms({
-			data: "err: file doesn't exist",
-			arg: [],
-			flag: 0,
-			id: id
-		}, socket);
-		return null;
-	}
-	if ((typeof obj[path[path.length - 1]].data == "undefined") && (typeof obj[path[path.length - 1]].link != "undefined")) {
-		fs.readFile("files/" + obj[path[path.length - 1]].link, "utf8", function (err, fdata) {
-			if (err) {
-				coms({
-					data: err,
-					arg: [],
-					flag: 0,
-					id: id
-				}, socket);
-			} else {
-				coms({
-					data: fdata,
-					arg: [],
-					flag: 0,
-					id: id
-				}, socket);
-			}
-		});
-	} else {
-		if (typeof obj[path[path.length - 1]].static != "undefined") coms({
-			data: "<a href='static/" + obj[path[path.length - 1]].static + "'>" + obj[path[path.length - 1]].static + "</a>",
-			arg: [],
-			flag: 0,
-			id: id
-		}, socket);
-		else coms({
-			data: obj[path[path.length - 1]].data,
-			arg: [],
-			flag: 0,
-			id: id
-		}, socket);
-	}
-}
+// function sfile(path, socket, id) { // get file
+// 	obj = gdir(path.slice(0, path.length - 1));
+// 	if (obj == null) {
+// 		coms({
+// 			data: "err: invalid directory",
+// 			arg: [],
+// 			flag: 0,
+// 			id: id
+// 		}, socket);
+// 		return null;
+// 	}
+// 	if (typeof obj[path[path.length - 1]] == "undefined") {
+// 		coms({
+// 			data: "err: file doesn't exist",
+// 			arg: [],
+// 			flag: 0,
+// 			id: id
+// 		}, socket);
+// 		return null;
+// 	}
+// 	if ((typeof obj[path[path.length - 1]].data == "undefined") && (typeof obj[path[path.length - 1]].link != "undefined")) {
+// 		fs.readFile("files/" + obj[path[path.length - 1]].link, "utf8", function (err, fdata) {
+// 			if (err) {
+// 				coms({
+// 					data: err,
+// 					arg: [],
+// 					flag: 0,
+// 					id: id
+// 				}, socket);
+// 			} else {
+// 				coms({
+// 					data: fdata,
+// 					arg: [],
+// 					flag: 0,
+// 					id: id
+// 				}, socket);
+// 			}
+// 		});
+// 	} else {
+// 		if (typeof obj[path[path.length - 1]].static != "undefined") coms({
+// 			data: "<a href='static/" + obj[path[path.length - 1]].static + "'>" + obj[path[path.length - 1]].static + "</a>",
+// 			arg: [],
+// 			flag: 0,
+// 			id: id
+// 		}, socket);
+// 		else coms({
+// 			data: obj[path[path.length - 1]].data,
+// 			arg: [],
+// 			flag: 0,
+// 			id: id
+// 		}, socket);
+// 	}
+// }
 
-function fsearch(dir, name) {
-	var is = false;
-	for (let key in dir) {
-		if ((typeof dir[key].data != 'undefined') || (typeof dir[key].link != 'undefined')) {
-			if (name === key) is = true;
-		} else {
-			is = fsearch(dir[key], name);
-		}
-		if (is) break;
-	}
-	return is
-}
-
-function exit(sig) {
-	console.log(`\n${sig}`)
-	process.exit(0)
-}
+// function fsearch(dir, name) {
+// 	var is = false;
+// 	for (let key in dir) {
+// 		if ((typeof dir[key].data != 'undefined') || (typeof dir[key].link != 'undefined')) {
+// 			if (name === key) is = true;
+// 		} else {
+// 			is = fsearch(dir[key], name);
+// 		}
+// 		if (is) break;
+// 	}
+// 	return is
+// }
 
 // express setup
 app
@@ -878,15 +864,12 @@ app
 // server setup
 
 const httpServer = http.createServer(app),
-	io = new socket()
-		.attach(httpServer)
+	io = new socket(httpServer)
 
-if (conf.cert.enable) {
-	const httpsServer = https.createServer(credentials, app)
-	io.attach(httpsServer)
-}
-
-process.on('SIGINT', exit)
+process.on('SIGINT', sig => {
+	console.log(`\n${sig}`)
+	process.exit(0)
+})
 
 // stdin input listener
 stdin.addListener("data", function (d) {
@@ -999,11 +982,7 @@ app.get('/', function (req, res) {
 	) {
 		res.redirect('https://' + req.hostname + req.originalUrl);
 	} else {
-		res.render('pages/index', {
-			vars: {
-				hostname: db.config.hostname
-			}
-		});
+		res.sendFile(path.join(__dirname, 'public/index.html'));
 	}
 });
 
