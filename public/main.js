@@ -1664,6 +1664,11 @@ class Con {
 								}
 								break;
 						}
+						if(mod.commands){
+							for (let f in mod.commands) {
+								this.Functions[f] = mod.commands[f]
+							}
+						}
 						this.log(`Downloaded ${name} module`, 'ok')
 						resolve()
 					}
