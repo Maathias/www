@@ -165,7 +165,7 @@ function date(format) {
 }
 
 function timestamp() {
-	return $('<txdrk></txdrk>')
+	return $('<txxblk></txxblk>')
 		.addClass('timestamp')
 		.append(date('tiny') + ' ')
 }
@@ -205,176 +205,176 @@ function download(content, filename) {
 	a.remove()
 }
 
-function toTree(obj, mdepth) {
-	/**
-	 * Creates tree visualization of variable
-	 * @param {any} obj variable to visualize
-	 * @param {number} mdepth max visualization depth
-	 * 
-	 * @returns {H} html visualization 
-	 */
+// function toTree(obj, mdepth) {
+// 	/**
+// 	 * Creates tree visualization of variable
+// 	 * @param {any} obj variable to visualize
+// 	 * @param {number} mdepth max visualization depth
+// 	 * 
+// 	 * @returns {H} html visualization 
+// 	 */
 
-	var typeOf = function (o) {
-		var t = typeof o;
+// 	var typeOf = function (o) {
+// 		var t = typeof o;
 
-		if (o instanceof Array) return "array";
-		if (o instanceof RegExp) return "regex";
-		if (o === null) return "null";
+// 		if (o instanceof Array) return "array";
+// 		if (o instanceof RegExp) return "regex";
+// 		if (o === null) return "null";
 
-		return t
-	}
+// 		return t
+// 	}
 
-	var contentType = function (v, name) {
+// 	var contentType = function (v, name) {
 
-		var type = typeOf(v)
+// 		var type = typeOf(v)
 
-		switch (type) {
+// 		switch (type) {
 
-			case 'number': return $("<txred></txred>").append(name ? name : "number")
-			case 'string': return $("<txgrn></txgrn>").append(name ? name : "string")
-			case 'boolean': return $("<txorn></txorn>").append(name ? name : "boolean")
-			case 'function': return $("<txcya></txcya>").append(name ? name : "function")
-			case 'array': return $("<txyel></txyel>").append(name ? name : "array")
-			case 'object': return $("<txblu></txblu>").append(name ? name : "object")
-			case 'regex': return $("<txprp></txprp>").append(name ? name : "regex")
-			case 'null': return $("<txdrk></txdrk>").append(name ? name : "null")
-			case 'undefined': return $("<txdrk></txdrk>").append(name ? name : "undefined")
-			default: return $("<txdrk></txdrk>").append(name ? name : "?")
-		}
+// 			case 'number': return $("<txred></txred>").append(name ? name : "number")
+// 			case 'string': return $("<txgrn></txgrn>").append(name ? name : "string")
+// 			case 'boolean': return $("<txorn></txorn>").append(name ? name : "boolean")
+// 			case 'function': return $("<txcya></txcya>").append(name ? name : "function")
+// 			case 'array': return $("<txyel></txyel>").append(name ? name : "array")
+// 			case 'object': return $("<txblu></txblu>").append(name ? name : "object")
+// 			case 'regex': return $("<txprp></txprp>").append(name ? name : "regex")
+// 			case 'null': return $("<txblk></txblk>").append(name ? name : "null")
+// 			case 'undefined': return $("<txblk></txblk>").append(name ? name : "undefined")
+// 			default: return $("<txblk></txblk>").append(name ? name : "?")
+// 		}
 
-	}
+// 	}
 
-	var $collapse = function (n) {
-		if (n) {
-			return $("<span></span>")
-				.addClass("collapse")
-				.append(
-					$("<i></i>")
-						.addClass('icon-plus-squared')
-				)
-		} else {
-			return $("<span></span>")
-				.addClass("collapse")
-				.append(
-					$("<i></i>")
-						.addClass('icon-minus-squared')
-				)
-		}
-	}
+// 	var $collapse = function (n) {
+// 		if (n) {
+// 			return $("<span></span>")
+// 				.addClass("collapse")
+// 				.append(
+// 					$("<i></i>")
+// 						.addClass('icon-plus-squared')
+// 				)
+// 		} else {
+// 			return $("<span></span>")
+// 				.addClass("collapse")
+// 				.append(
+// 					$("<i></i>")
+// 						.addClass('icon-minus-squared')
+// 				)
+// 		}
+// 	}
 
-	var $recur = function (obj, depth) {
+// 	var $recur = function (obj, depth) {
 
-		let m = isDefined(mdepth, Config.treeDepth, 4);
-		const maxd = m <= 7 ? m : 7;	// max depth
-		const maxn = 50;	// max level length
-		const maxs = 150;	// max string length
-		const maxc = 2;		// level to collapse after
+// 		let m = isDefined(mdepth, Config.treeDepth, 4);
+// 		const maxd = m <= 7 ? m : 7;	// max depth
+// 		const maxn = 50;	// max level length
+// 		const maxs = 150;	// max string length
+// 		const maxc = 2;		// level to collapse after
 
-		var $list = $("<ul></ul>");
+// 		var $list = $("<ul></ul>");
 
-		var i = 0;
-		for (let key in obj) {
-			i++;
-			if (i > maxn) {
-				continue
-			}
+// 		var i = 0;
+// 		for (let key in obj) {
+// 			i++;
+// 			if (i > maxn) {
+// 				continue
+// 			}
 
-			var content = obj[key]; // content
-			var type = typeOf(obj[key]); // content type
+// 			var content = obj[key]; // content
+// 			var type = typeOf(obj[key]); // content type
 
 
-			switch (type) {
-				case 'object':
-				case 'array':
-					if ($.isEmptyObject(content)) { // is content epmty
-						$list.append( // empty object
-							$("<li></li>")
-								.append(contentType(content, key))
-								.append(": ")
-								.append(`<txpnk>[empty]</txpnk>`)
-						)
-					} else { // content not empty
-						if (depth > maxd) { // is max depth reached
-							$list.append( // function description (max depth reached)
-								$("<li></li>")
-									.append(contentType(content, key))
-									.append(": ")
-									.append(`<txpnk>${isWhat(content)}</txpnk>`)
-							)
-						} else { // max depth not reached
-							$list.append( // continue recursion
-								$("<li></li>")
-									.append(contentType(content, key))
-									.append(": ")
-									.append( // collapse button
-										$collapse(depth >= maxc)
-									)
-									.append($recur(content, depth + 1))
-							)
-						}
-					}
-					break;
+// 			switch (type) {
+// 				case 'object':
+// 				case 'array':
+// 					if ($.isEmptyObject(content)) { // is content epmty
+// 						$list.append( // empty object
+// 							$("<li></li>")
+// 								.append(contentType(content, key))
+// 								.append(": ")
+// 								.append(`<txpnk>[empty]</txpnk>`)
+// 						)
+// 					} else { // content not empty
+// 						if (depth > maxd) { // is max depth reached
+// 							$list.append( // function description (max depth reached)
+// 								$("<li></li>")
+// 									.append(contentType(content, key))
+// 									.append(": ")
+// 									.append(`<txpnk>${isWhat(content)}</txpnk>`)
+// 							)
+// 						} else { // max depth not reached
+// 							$list.append( // continue recursion
+// 								$("<li></li>")
+// 									.append(contentType(content, key))
+// 									.append(": ")
+// 									.append( // collapse button
+// 										$collapse(depth >= maxc)
+// 									)
+// 									.append($recur(content, depth + 1))
+// 							)
+// 						}
+// 					}
+// 					break;
 
-				case 'function':
-					$list.append(
-						$("<li></li>")
-							.append(contentType(content, key))
-							.append(": ")
-							.append(
-								`<txpnk>${isWhat(content)}</txpnk>`
-							)
-					)
-					break;
+// 				case 'function':
+// 					$list.append(
+// 						$("<li></li>")
+// 							.append(contentType(content, key))
+// 							.append(": ")
+// 							.append(
+// 								`<txpnk>${isWhat(content)}</txpnk>`
+// 							)
+// 					)
+// 					break;
 
-				default:
-					$list.append(
-						$("<li></li>")
-							.append(contentType(content, key))
-							.append(": ")
-							.append(content)
-					)
-					break;
-			}
+// 				default:
+// 					$list.append(
+// 						$("<li></li>")
+// 							.append(contentType(content, key))
+// 							.append(": ")
+// 							.append(content)
+// 					)
+// 					break;
+// 			}
 
-		}
+// 		}
 
-		if (i > maxn) {
+// 		if (i > maxn) {
 
-			$list.append(
-				$("<li></li>")
-					.append(
-						$("<txprp></txprp>")
-							.append(`... ${i - maxn} more`)
-					)
-			)
+// 			$list.append(
+// 				$("<li></li>")
+// 					.append(
+// 						$("<txprp></txprp>")
+// 							.append(`... ${i - maxn} more`)
+// 					)
+// 			)
 
-		}
+// 		}
 
-		if (depth > maxc) {
-			$list.hide()
-		}
+// 		if (depth > maxc) {
+// 			$list.hide()
+// 		}
 
-		return $list
+// 		return $list
 
-	}
+// 	}
 
-	if (typeOf(obj) != "array" && typeOf(obj) != "object")
-		return $("<span></span>").append(contentType(obj)).append(": ").append(obj + "")
+// 	if (typeOf(obj) != "array" && typeOf(obj) != "object")
+// 		return $("<span></span>").append(contentType(obj)).append(": ").append(obj + "")
 
-	var $ascii = $("<ul></ul>")
-		.addClass("ascii")
-		.append(
-			$("<li></li>")
-				.append(contentType(obj))
-				.append(
-					$collapse(false)
-				)
-				.append($recur(obj, 1))
-		)
+// 	var $ascii = $("<ul></ul>")
+// 		.addClass("ascii")
+// 		.append(
+// 			$("<li></li>")
+// 				.append(contentType(obj))
+// 				.append(
+// 					$collapse(false)
+// 				)
+// 				.append($recur(obj, 1))
+// 		)
 
-	return $ascii;
+// 	return $ascii;
 
-}
+// }
 
 function toTable(content) {
 	/**
@@ -471,6 +471,7 @@ function toSyntax(data, lang) {
 	return `<pre><code>${indexed}</code></pre>`*/
 }
 
+
 function getLocal(key) {
 	return JSON.parse(localStorage.getItem(key))
 }
@@ -491,15 +492,35 @@ function setSession(key, value) {
 	return value
 }
 
-function resource(link) {
-	fetch(link)
-		.then(data => {
-			console.log(data)
-			data.text()
-				.then(text => {
+function newScript(url) {
+	return new Promise((resolve, reject) => {
+		var script = document.createElement('script');
+		script.onload = function () {
+			resolve()
+		};
+		script.onerror = function (message) {
+			reject(message)
+		};
+		script.src = location.href + url;
+		document.head.appendChild(script); //or something of the likes
+	})
 
-				})
-		})
+}
+
+function requiresStyle(url) {
+	return new Promise((resolve, reject) => {
+		// console.log($(`link[href='${url}']`).length == 1)
+		if ($(`link[href='${url}']`).length == 1) return
+		var link = document.createElement('link');
+		link.onload = function () {
+			console.log('resolve')
+			resolve()
+		};
+		link.href = url;
+		link.rel = 'stylesheet';
+		document.head.appendChild(link); //or something of the likes
+	})
+
 }
 
 // function updateInfo(res) {
@@ -793,7 +814,7 @@ function resource(link) {
 // 						colors[data.participants[key].name] = "txred";
 // 						break;
 // 					default:
-// 						colors[data.participants[key].name] = "txdrk";
+// 						colors[data.participants[key].name] = "txblk";
 // 						break;
 // 				}
 
@@ -806,7 +827,7 @@ function resource(link) {
 // 				// parse every message in file
 // 				var messages = data.messages.slice().reverse()
 // 				for (let key in messages) {
-// 					let col = colors[messages[key].sender_name] ? colors[messages[key].sender_name] : "txdrk";
+// 					let col = colors[messages[key].sender_name] ? colors[messages[key].sender_name] : "txblk";
 // 					con.log("<" + col + ">" + decodeURIComponent(escape(messages[key].sender_name)) + "</" + col + ">: " + decodeURIComponent(escape(messages[key].content)));
 
 // 					// break if requested amount is parsed
@@ -827,6 +848,25 @@ function resource(link) {
 
 // 	return null;
 // }
+
+class Waiter {
+	constructor(list, f){
+		this.list = {}
+		this.callback = f
+		for(let n of list){
+			this.list[n] = false
+		}
+	}
+
+	update(name){
+		this.list[name] = true
+		for(let el in this.list){
+			if(this.list[el] == false)
+				return false
+		}
+		this.callback()
+	}
+}
 
 class Elements {
 	constructor($wind) {
@@ -881,17 +921,17 @@ class Elements {
 								.prop("spellcheck", false)
 								.prop("autofocus", true)
 						)
-						// .append(
-						// 	$("<span></span>")
-						// 		.addClass("icons")
-						// 		.append(
-						// 			$("<i></i>").addClass("icon-volume-up"),
-						// 			$("<i></i>").addClass("icon-lock-open"),
-						// 			$("<i></i>").addClass("icon-trash"),
-						// 			$("<i></i>").addClass("icon-level-down"),
-						// 			$("<i></i>").addClass("icon-unlink")
-						// 		)
-						// )
+					// .append(
+					// 	$("<span></span>")
+					// 		.addClass("icons")
+					// 		.append(
+					// 			$("<i></i>").addClass("icon-volume-up"),
+					// 			$("<i></i>").addClass("icon-lock-open"),
+					// 			$("<i></i>").addClass("icon-trash"),
+					// 			$("<i></i>").addClass("icon-level-down"),
+					// 			$("<i></i>").addClass("icon-unlink")
+					// 		)
+					// )
 				)
 			$("body").append($wind);
 		}
@@ -993,47 +1033,38 @@ class Elements {
 
 }
 
-class Request {
-	constructor(com) {
-		this.com = com.c;
-		this.arg = com.arg;
-		this.dir = com.arg;
-		this.id = com.id;
-		this.con = com.con.id;
-		this.udata = com.con.udata;
-	}
-
-}
-
 class Com {
-	constructor(cc, data, con) {
+	constructor(data, con) {
 		this.con = con; // parent Con object
 		this.id = makeID(5); // base64 ID
 
-		this.cc = cc; // full command from input (string)
-		this.c = data.c; // executed command (string)
-		this.arg = data.arg; // command arguments (array)
-		this.dir = con.elements.$commpath.html(); // Con working directory (string)
+		this.raw = data.raw; // raw command string
+		this.c = data.c; // command name
+		this.arg = data.arg; // command arguments
+		// this.dir = con.elements.$commpath.html(); // Con working directory (string)
 
 		this.$elem = undefined; // Com element
 		this.$ud = undefined; // Com UserData
 		this.$sr = undefined // server response
 		this.formatted = undefined; // formatted server response data (mixed)
-		this.stack = getStackTrace(); // current stack trace (array)
+		// this.stack = getStackTrace(); // current stack trace (array)
 
 		this.timer = undefined;
 		this.time = performance.now();
 
-		this.req = undefined; // request data
-		this.res = undefined; // server response data
+		this.res = undefined; // data output
 
 		this.blocks = []
 
-		this.log = this.con.log // log method
+		this.__proto__.log = this.con.log
 
-		this._append()
-		if (!this._local())
-			this._send()
+		// con.onload = function(){
+			this._init()
+		// }
+		// this._append()
+		// this._init()
+		// if (!this._init())
+		// this._send()
 	}
 
 	_append() {
@@ -1062,7 +1093,7 @@ class Com {
 					.append(" $ ")
 					.append(
 						$("<span></span>")
-							.append(this.cc)
+							.append(this.raw)
 					)
 			)
 			.append(
@@ -1075,7 +1106,26 @@ class Com {
 
 	}
 
-	_local() {
+	_init() {
+
+		this._append()
+
+		if (this.con.Functions[this.c]) { // offline command is available
+			this.con.Functions[this.c](this)
+		} else { // send command to server
+			// this.log("Local command not found", 'warning', 3)
+			if (this.con.Socket) { // check for module
+				if (this.con.Socket.socket.connected) { // check for connection
+					this.con.Socket.send(this)
+				} else {
+					this.log("Server disconnected", 'error')
+				}
+			} else {
+				this.log("Socket module not available", 'error')
+			}
+		}
+
+		return
 
 		switch (this.c) {
 			default:
@@ -1113,20 +1163,6 @@ class Com {
 
 			case "exit":
 				window.close();
-				break;
-
-			case "clear":
-				this.con.clear();
-				break;
-
-			case "eval":
-				try {
-					this.formatted = toTree(eval(this.arg.join(" ")));
-				} catch (error) {
-					console.error(error);
-					this.log(error, "error");
-				}
-				this.insertResponse();
 				break;
 
 			case "json":
@@ -1170,27 +1206,10 @@ class Com {
 
 		}
 
-
-		return 1;
-
 	}
 
-	_send() {
-		if (this.res) return; // if response is defined, stop
-
-		this._startLoading(); // start loading animation
-		this.req = new Request(this); // create Request object
-
-		this.con.Socket.socket.emit("com", this.req); // send Request object
-
-		this.timer = setTimeout(function (com) { // set server timeout
-			com.timeout(false); // call server response timeout
-		}, this.con.timeout, this); // Con.timeout time, Com object
-
-	}
-
-	update(res) {
-		if (res.meta === null && res.data === null) {
+	async update(res) {
+		if (res.end) {
 			this._end()
 			return
 		}
@@ -1199,81 +1218,29 @@ class Com {
 		this.blocks[res.meta.n] = res
 		this._timeout(true)
 
-		var block = $('<div data-n="' + res.meta.n + '"</div>')
-			.append(this._unpack(res)),
-			len = this.$sr.children().length
-
-
-		if (len != 0) {
-			let last = this.$sr.children(`div:lt(${res.meta.n}):last-child`)
-			if (last.length) {
-				last.after(block)
-			} else {
-				let last = this.$sr.children(`div:gt(${res.meta.n}):first-child`)
-				last.after(block)
-			}
-
-		} else {
-			this.$sr.append(block)
-		}
-
-		this.con.scrollBottom(false); // scroll to end of page (non-force)
+		this._addBlock(this._block(await this.con.unpack(res), res.meta.n))
+		// this.con.scrollBottom(false); // scroll to end of page (non-force)
+	}
+	
+	_block(data, n){
+		return $(`<div data-n="${n}"</div>`)
+			.append(data)
+			.append(timestamp())
 	}
 
-	_unpack(res) {
-		switch (res.meta.flag) {
-			default:
-			case 0: // standard response, append data as plaintext
-				return res.data
-			case 1: // login response
-				var r = this.res.data;
-
-				this.con.auth(this.res.udata);
-
-				setCookie("user", r.user);
-				setCookie("session", r.session);
-
-				if ((r.user == "") && (r.session == ""))
-					this.log('Loged out succesfully', "ok");
-				else
-					this.log('Loged in succesfully', "ok");
-
-				this.insertResponse();
-
-				break;
-			case 2: // silent response, do nothing
-				console.log(data);
-				break;
-			case 4:
-				// this.con.commandAppend(data.data);	// append response to command list
-				break;
-			case 5: // cd response, change dir
-				$(this.con.elements.$commpath).html(data.data);	// append response to command list
-				break;
-			case 6: // log response
-				this.log(res.data.data, res.meta.arg);
-				break;
-
-			case 7:
-				// setstyle(data.data);
-				break;
-			case 8: // auth
-				this.con.auth(this.response.data);
-				break;
-			case 9: // toTree
-				return toTree(res.data);
-
-			case 10: // toTable
-				return toTable(res.data);
-
-			case 11: // toSyntax
-				return toSyntax(res.data);
-
-			case 12: // ping
-				this.formatted =
-					`${this.res.data} [${Math.floor(((performance.now() - this.time) - this.res.time[this.res.time.length - 1][0]) * 1000) / 1000} ms]`;
-				this.insertResponse();
-				break;
+	_addBlock(block){
+		var children = this.$sr.children(),
+			len = children.length
+		if ((len > 0) && (parseInt(block.attr('data-n')) != -1)) {
+			for (let child of children) {
+				if (parseInt($(child).attr('data-n')) > block.attr('data-n')) {
+					$(child).before(block)
+					return
+				}
+			}
+			this.$sr.append(block)
+		} else {
+			this.$sr.append(block)
 		}
 	}
 
@@ -1294,25 +1261,21 @@ class Com {
 
 	}
 
-	insertResponse() {
+	insert(out) {
+		this._addBlock(this._block(out, -1));
+		// this._stopLoading(); // stop loading animation
 
-		this._stopLoading(); // stop loading animation
+		// if (this.res === null) return; // if response is null (server timed out) stop
 
-		if (this.res === null) return; // if response is null (server timed out) stop
+		// this._timeout(true); // server responded ok
 
-		this._timeout(true); // server responded ok
 
-		this.sr = $("<div></div>") // create response element
-			.append(this.formatted)
-			.addClass("sr")
 		// .hide()
 
-		this.$elem // append response data to Com element
-			.append(this.sr)
 
 
 		// this.sr.slideDown(200); // animate response div
-		this.con.scrollBottom(false); // scroll to end of page (non-force)
+		// this.con.scrollBottom(false); // scroll to end of page (non-force)
 
 	}
 
@@ -1329,56 +1292,56 @@ class Com {
 		this.time = performance.now()
 	}
 
-	addForm(obj, type) {
-		this.con.scrollBottom(); // scroll to EOP
-		this.con.elements.$commline.disable(); // disable commline
+	// addForm(obj, type) {
+	// 	this.con.scrollBottom(); // scroll to EOP
+	// 	this.con.elements.$commline.disable(); // disable commline
 
-		var form = $("<form></form>") // create form Node
+	// 	var form = $("<form></form>") // create form Node
 
-		for (let key in obj.label) { // for every label add label Node
-			form.append(
-				$("<label></label>")
-					.append(`${obj.label[key]}: `)
-					.append(
-						$("<input>")
-							.prop("type", obj.type[key])
-							.prop("name", obj.name[key])
-					)
-					.append("<br>")
-			)
-		}
+	// 	for (let key in obj.label) { // for every label add label Node
+	// 		form.append(
+	// 			$("<label></label>")
+	// 				.append(`${obj.label[key]}: `)
+	// 				.append(
+	// 					$("<input>")
+	// 						.prop("type", obj.type[key])
+	// 						.prop("name", obj.name[key])
+	// 				)
+	// 				.append("<br>")
+	// 		)
+	// 	}
 
-		this.$elem.append(form); // add form to Com elem
-		this.$elem.find("input")[0].focus(); // focus on first form input
+	// 	this.$elem.append(form); // add form to Com elem
+	// 	this.$elem.find("input")[0].focus(); // focus on first form input
 
-	}
+	// }
 
-	sendForm() {
+	// sendForm() {
 
-		var form = this.$elem.find("form"); // find Com form
-		var obj = {}; // create response object
+	// 	var form = this.$elem.find("form"); // find Com form
+	// 	var obj = {}; // create response object
 
-		this.removeForm(); // disable form
+	// 	this.removeForm(); // disable form
 
-		form.children("label").each(function (index) {
-			// add each input value to response object with property name from input name
-			obj[$(this).children("input").prop('name')] = $(this).children("input").val() != "on" ? $(this).children("input").val() : $(this).children("input").is(":checked");
-		});
+	// 	form.children("label").each(function (index) {
+	// 		// add each input value to response object with property name from input name
+	// 		obj[$(this).children("input").prop('name')] = $(this).children("input").val() != "on" ? $(this).children("input").val() : $(this).children("input").is(":checked");
+	// 	});
 
-		this.arg = obj; // set Com arguments as response object
-		this._send(); // send Com
+	// 	this.arg = obj; // set Com arguments as response object
+	// 	this._send(); // send Com
 
-	}
+	// }
 
-	removeForm() {
+	// removeForm() {
 
-		this.$elem.find("form").children("label").each(function (index) { // form label of Com
-			$(this).children("input").prop('readonly', true); // set each input to 'readonly'
-		});
+	// 	this.$elem.find("form").children("label").each(function (index) { // form label of Com
+	// 		$(this).children("input").prop('readonly', true); // set each input to 'readonly'
+	// 	});
 
-		this.con.elements.$commline.enable(); // enable commline
+	// 	this.con.elements.$commline.enable(); // enable commline
 
-	}
+	// }
 }
 
 class Con {
@@ -1428,6 +1391,9 @@ class Con {
 
 		}
 
+		this.Functions = {};
+		this.Classes = {};
+
 		this.m = undefined;	// last m recipient
 		this.coms = []; // executed Coms list
 		this.scroll = true; // block scrollBottom flag
@@ -1448,7 +1414,19 @@ class Con {
 			shortid: undefined
 		}
 
-		$(this.$wind).ready(()=>{
+		this.keymap = {
+			'2l': () => this.clear()
+		}
+		
+		// var c = this
+		// this.elements.$wind[0].onload = ()=>{
+		// 	// console.log('ready')
+		// 	// c._ready()`
+		// }
+
+		// this.elements.$wind[0].onload = alert
+		this.elements.$commline.ready(() => {
+			// alert()
 			this._ready()
 		});
 		// this._ready()
@@ -1506,7 +1484,7 @@ class Con {
 	}
 
 	log(data, opt, lvl) {
-
+		// console.log(getStackTrace())
 		var lvl = isDefined(lvl, 1);
 
 		if (lvl > this.verbose) return
@@ -1515,11 +1493,11 @@ class Con {
 
 		switch (opt) {
 			default:
-			case "info": opt = ['txblu', 'Info']; break;
-			case "warning": opt = ['txyel', 'Warning']; break;
-			case "error": opt = ['txred', 'Error']; break;
-			case "ok": opt = ['txgrn', 'OK']; break;
-			case "message": opt = ['txpnk', 'Message']; break;
+			case 'info': opt = ['txblu', 'Info']; break;
+			case 'warning': opt = ['txyel', 'Warning']; break;
+			case 'error': opt = ['txred', 'Error']; break;
+			case 'ok': opt = ['txgrn', 'OK']; break;
+			case 'prompt': opt = ['txcya', '?']; break;
 		}
 
 		var out = $("<div></div>")
@@ -1561,48 +1539,47 @@ class Con {
 
 		if (this.elements.$commin.is(":hidden")) return;	// if commandline is blocked (hidden), stop executing
 
-		var c = this.elements.$commin.val();	// get command query
+		var raw = this.elements.$commin.val();	// get raw input
 		this.elements.$commin.val("");	// clear commandline input
 
-		if (c == "") return;
+		if (raw == "") return;
 
-		this.history.push(c)
+		this.history.push(raw)
 
-		// this.lastc.unshift(c);	// add executed command to the last command list
-		// this.lc = this.lastc.length-1;	// reset last command number
+		if (raw.indexOf(' ') > -1) {	// sperate arguments
+			var arg = raw.split(" "),	// split to array
+				c = arg.shift();	// get command only
+		} else { // no arguments given
+			var arg = [],
+			c = raw.toLowerCase()
+		}
 
-		var cc = c;
+		this.coms.push(new Com({
+			raw: raw,
+			c: c,
+			arg: arg
+		}, this))
 
-		if (c.indexOf(' ') > -1) {	// check for for arguments
-			var arg = c.split(" ");	// split string
-			c = arg.shift();
-		} else arg = [];	// if the arent any arguments specified, set var to empty json
+	}
 
-		// arg = argq(arg); // join quotes
+	async unpack(res) {
+		switch (res.meta.flag) {
+			default:
+			case 0: // plaintext
+				return res.data
+			case 1: // Tree
+				await this._requires('Tree')
+				return new this.Classes.Tree(res.data).$
+			case 6: // log response
+				// this.log(res.data.data, res.meta.arg);
+				break;
 
-		c = c.toLowerCase(); // command to lowercase (for mobile)
+			case 9: // toTree
+			// return toTree(res.data);
 
-		// if(c=="m"){
-		// 	if(arg[0].startsWith("-")){
-		// 		arg = [arg[0].slice(1), arg.slice(1).join(" ")];
-		// 		this.m = arg[0];
-		// 	}else{
-		// 		arg.splice(0, 0, this.m);
-		// 		arg = [this.m, arg.slice(1).join(" ")];
-		// 	}
-		// }
-
-
-
-		this.coms.push(new Com(cc, { c: c, arg: arg }, this))
-
-		// if(c=="m") com.content = this.returnError("-> "+arg[0]+": "+arg[1], "message");
-		// com._append(); // append executed command to div
-
-		// if (com.local()) return; // local command parsing
-
-		// com.send();
-
+			case 10: // toTable
+			// return toTable(res.data);
+		}
 	}
 
 	getScroll() { // get scroll distance to bottom
@@ -1666,21 +1643,59 @@ class Con {
 			this.log(`Requesting ${name} module`, 'info')
 			import(`./packages/${name}.js`)
 				.then(mod => {
-					this.log(`Downloaded ${name} module`, 'ok')
-					console.log(mod)
-					switch(mod.type){
-						case 'sub':
-							this[name] = new mod.default(this)
-							break;
-						case 'class':
-							this[name] = mod.default
-							break;
+					var done = ()=>{
+						switch (mod.type) {
+							case 'sub':
+								try{
+									this.log(`Starting ${name} module`, 'info')
+									this[name] = new mod.default(this)
+								}catch(err){
+									this.log(`Module ${name} failed: ${err}`, 'error')
+								}
+								break;
+							case 'class':
+								this.Classes[name] = mod.default
+								break;
+							case 'command':
+								for (let f in mod.default) {
+									this.Functions[f] = mod.default[f]
+								}
+								break;
+						}
+						this.log(`Downloaded ${name} module`, 'ok')
+						resolve()
 					}
-					resolve()
+					
+					if (mod.requires) {
+						var list = []
+						for (let what in mod.requires) {
+							list = list.concat(mod.requires[what])
+						}
+						let waiter = new Waiter(list, () => {
+							done()
+						})
+
+						if (mod.requires.styles) {
+							for (let style of mod.requires.styles) {
+								requiresStyle(style)
+									.then(() => {
+										waiter.update(style)
+									})
+							}
+						}
+						if (mod.requires.scripts) {
+							for (let script of mod.requires.scripts) {
+								newScript(script)
+									.then(() => {
+										waiter.update(script)
+									})
+							}
+						}
+					} else done()
+					// resolve()
 				})
 				.catch(err => {
 					this.log(`Downloading ${name} module failed: ${err}`, 'error')
-
 					reject()
 				})
 
@@ -1708,8 +1723,27 @@ class Con {
 		});
 	}
 
+	// _getMultiPackage(...names){
+	// 	return new Promise((resolve, reject) => {
+	// 		var list = {}
+	// 		function update(name) {
+	// 			list[name] = true
+	// 			for (let el in list) {
+	// 				if (!el) return
+	// 			}
+	// 			console.log('resolve',)
+	// 			resolve()
+	// 		}
+	// 		for (let name of names) {
+	// 			list[name] = false
+	// 			this._getPackage(name)
+	// 				.then(()=>update(name))
+	// 		}
+	// 	})
+	// }
+
 	_requires(name) {
-		if(!Config.packages[name])
+		if (!Config.packages[name])
 			Config.packages[name] = this._getPackage(name)
 
 		return Config.packages[name]
@@ -1726,6 +1760,9 @@ class Con {
 		// })
 	}
 
+	_optional(name) {
+		this.log(`There is an optional module: ${name}, do you want to download it?`, 'prompt')
+	}
 
 	_ready() {
 		$(this.elements.$wind).prop("id", this.id); // attach Con id to DOM
@@ -1773,13 +1810,10 @@ class Con {
 				+ (e.ctrlKey) * 2
 				+ (e.metaKey) * 3
 				+ (e.shiftKey) * 4
-				+ e.key,
-				options = {
-					'2l': () => this.clear()
-				}
+				+ e.key
 
-			if (options[val]) {
-				options[val]()
+			if (this.keymap[val]) {
+				this.keymap[val]()
 				e.preventDefault()
 			}
 		})
@@ -1836,6 +1870,8 @@ class Con {
 		this.log("Console ready", 'ok')
 
 		this._requires("Socket")
+		this._requires("Essentials")
+		// this._requires("Tree")
 
 	}
 

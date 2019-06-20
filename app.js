@@ -663,8 +663,7 @@ class Com {
 		this.update()
 		this.handle.socket.emit('com', {
 			res: this.res,
-			data: null,
-			meta: null
+			end: true
 		});
 	}
 

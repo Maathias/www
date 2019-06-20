@@ -1,12 +1,19 @@
 export var type = "class"
+export var requires = {
+	styles: [
+		'tree.css'
+	],
+}
+
 export default class Tree {
 	constructor(data) {
 		this.data = data
 
-		if (this._typeOf(data) != "array" && this._typeOf(data) != "object")
-			return $("<span></span>").append(_contentType(data)).append(": ").append(data + "")
+		// requiresStyle('tree.css')
 
-		this.$ = $("<ul></ul>")
+		if (this._typeOf(data) != "array" && this._typeOf(data) != "object")
+			this.$ = $("<span></span>").append(this._contentType(data)).append(": ").append(`${data}`)
+		else this.$ = $("<ul></ul>")
 			.addClass("ascii tree")
 			.append(
 				$("<li></li>")
@@ -19,7 +26,7 @@ export default class Tree {
 
 	}
 
-	get(){
+	get() {
 		return this.$
 	}
 
@@ -41,14 +48,14 @@ export default class Tree {
 
 			case 'number': return $("<txred></txred>").append(name ? name : "number")
 			case 'string': return $("<txgrn></txgrn>").append(name ? name : "string")
-			case 'boolean': return $("<txorn></txorn>").append(name ? name : "boolean")
+			case 'boolean': return $("<txyel></txyel>").append(name ? name : "boolean")
 			case 'function': return $("<txcya></txcya>").append(name ? name : "function")
 			case 'array': return $("<txyel></txyel>").append(name ? name : "array")
 			case 'object': return $("<txblu></txblu>").append(name ? name : "object")
 			case 'regex': return $("<txprp></txprp>").append(name ? name : "regex")
-			case 'null': return $("<txdrk></txdrk>").append(name ? name : "null")
-			case 'undefined': return $("<txdrk></txdrk>").append(name ? name : "undefined")
-			default: return $("<txdrk></txdrk>").append(name ? name : "?")
+			case 'null': return $("<txxblk></txxblk>").append(name ? name : "null")
+			case 'undefined': return $("<txxblk></txxblk>").append(name ? name : "undefined")
+			default: return $("<txxblk></txxblk>").append(name ? name : "?")
 		}
 
 	}
@@ -100,7 +107,7 @@ export default class Tree {
 							$("<li></li>")
 								.append(this._contentType(content, key))
 								.append(": ")
-								.append(`<txpnk>[empty]</txpnk>`)
+								.append(`<txxprp>[empty]</txxprp>`)
 						)
 					} else { // content not empty
 						if (depth > maxd) { // is max depth reached
@@ -108,7 +115,7 @@ export default class Tree {
 								$("<li></li>")
 									.append(this._contentType(content, key))
 									.append(": ")
-									.append(`<txpnk>${isWhat(content)}</txpnk>`)
+									.append(`<txxprp>${isWhat(content)}</txxprp>`)
 							)
 						} else { // max depth not reached
 							$list.append( // continue recursion
@@ -130,7 +137,7 @@ export default class Tree {
 							.append(this._contentType(content, key))
 							.append(": ")
 							.append(
-								`<txpnk>${isWhat(content)}</txpnk>`
+								`<txxprp>${isWhat(content)}</txxprp>`
 							)
 					)
 					break;

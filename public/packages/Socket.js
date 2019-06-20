@@ -1,60 +1,59 @@
 export var type = "sub"
+export var requires = {
+	scripts: ["socket.io/socket.io.js"]
+}
+
+class Request {
+	constructor(com) {
+		this.com = com.c;
+		this.arg = com.arg;
+		this.dir = com.arg;
+		this.id = com.id;
+		this.con = com.con.id;
+		this.udata = com.con.udata;
+	}
+}
+
 export default class Socket {
 
 	constructor(con) {
 		this.con = con
-
+		// throw new Error('test')
 		// socket event register function modification (pass additional parameter)
 		// this.socket.originalOn = this.socket.on;
 		// this.socket.on = function (event, data, callback) {
 		// 	return this.originalOn.call(this, event, (e) => callback(e, data));
 		// };
+		// newScript()
+		// 	.then(() => {
+				this.socket = io('/')
 
-		this.socket = io('/')
+				// socket connecting start event
+				this.socket.on('connecting', (data) => con.log("Conecting...", "info", 2));
+				this.socket.on("connect_error", (data) => con.log(data, "error"))
 
-		// socket connecting start event
-		this.socket.on('connecting', (data) => con.log("Conecting...", "info", 2));
-		this.socket.on("connect_error", (data) => con.log(data, "error"))
+				this.socket.on('auth', d => this.auth(d))
+				this.socket.on('com', d => this._receive(d))
+				this.socket.on('silent', d => this._silent(d))
 
-		this.socket.on('auth', (data) => this.auth(data));
-		this.socket.on('com', (data) => this.receive(data));
+				// socket disconnected event
+				this.socket.on("disconnect", (data) => {
+					con.log(`Disconnected from server: ${data}`, "warning")
+					this.socket.connect()
+				})
 
-		// socket disconnected event
-		this.socket.on("disconnect", (data) => {
-			con.log(`Disconnected from server: ${data}`, "warning")
-			con.uAuth(false)
-		})
-		
-		// socket succesfully connected event
-		this.socket.on('connect', (data) => {
+				// socket succesfully connected event
+				this.socket.on('connect', (data) => {
 
-			con.log("Conected to the server", "ok")
-			if (!this.tryAuth()) this.motd()
-			else con.log("Credentials detected, waiting for auth before motd", "info", 2)
+					con.log("Conected to the server", "ok")
+					if (!this.tryAuth()) this.motd()
+					else con.log("Credentials detected, waiting for auth before motd", "info", 2)
 
-		});
-
-		// // dynamic (refreshed) data update
-		// this.socket.on("dynamic", (data) => {
-		// 	console.log(data)
-		// 	// /ChangeDom.updateInfo(data);
-		// })
-
-		// message broadcast (private & public) event
-		// this.socket.on("broadcast", (data) => {
-		// 	con.log(data.data, "message");
-		// 	con.m = data.frm;
-		// 	con.scrollBottom(true);
-		// 	if (data.imp) alert("Broadcast message received");
-		// 	notif.play();
-		// 	con.m = data.frm;
-
-		// })
-
-		// remote execute event TODO: fix
-		// this.socket.on("eval", (data) => $("head").append(eval(data.data)))
-
-		
+				});
+			// })
+	// 		.catch(err=>{
+	// 			this.con.log(`socket.io.js download failed: ${err}`, 'error')
+	// 		})
 	}
 
 	motd() {
@@ -67,8 +66,32 @@ export default class Socket {
 		}
 	}
 
-	receive(res) {
+	_silent(res){
+		this.con.unpack(res)
+	}
+
+	_receive(res) {
 		this.con.getCom(res.res.id).update(res);
+	}
+
+	send(com) {
+		// if (this.res) return; // if response is defined, stop
+
+		// this._startLoading(); // start loading animation
+
+		this.socket.emit("com", {
+			com: com.c,
+			arg: com.arg,
+			dir: com.arg,
+			id: com.id,
+			con: com.con.id,
+			udata: com.con.udata
+		}); // send Request object
+
+		// this.timer = setTimeout(function (com) { // set server timeout
+		// 	com.timeout(false); // call server response timeout
+		// }, this.con.timeout, this); // Con.timeout time, Com object
+
 	}
 
 	uAuth(val) {

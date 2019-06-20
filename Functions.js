@@ -1,5 +1,5 @@
 const chalk = require('chalk')
-module.exports = class Functions{
+module.exports = class Functions {
 	static ID(n) {
 		/**
 		 * thiserate random base64 string identificator.
@@ -22,25 +22,30 @@ module.exports = class Functions{
 		 * thiserates current date in specified format
 		 * long - DD/MM/YYYY HH:MM:SS
 		 * log - DD/MMM HH:MM:SS
+		 * tiny - MM:SS,SSS
 		 * @param {string} format date format 
 		 * 
 		 * @returns {string} date in specified format
 		 */
 
 		var d = new Date,
-			out = new String
+			out = new String,
+			h = d.getHours() < 10 ? "0" + d.getHours() : d.getHours(),
+			m = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes(),
+			s = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds(),
+			ms = (function () {
+				let ms = d.getMilliseconds()
+				return ms < 10 ? '00' + ms : (ms < 100 ? '0' + ms : ms)
+			})()
 
 		switch (format) {
 			default:
 			case 'long':
-				let m = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes()
-				let s = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds()
-				out = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + d.getHours() + ":" + m + ":" + s
-				break;
+				return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + d.getHours() + ":" + m + ":" + s
 			case 'log':
-				let p = new Date().toString().replace(/[A-Z]{3}\+/, '+').split(/ /)
-				out = p[2] + '/' + p[1] + ' ' + p[4]
-				break;
+				return `${d.getDate()}/${d.getMonth()} ${h}:${m}:${s}:${ms}`
+			case 'tiny':
+				return `${h}:${m}:${s}.${ms}`
 		}
 
 		return out
@@ -103,7 +108,7 @@ module.exports = class Functions{
 
 		if (lvl > verbose) return
 
-		var date = chalk.underline(this.date('log')) + ` ${"#".repeat(lvl)}`,
+		var date = chalk.gray(this.date('log')) + ` ${"#".repeat(lvl)}`,
 			actions = {
 				'connect': () => console.log(`${date} CONNECTED        ${chalk.gray(`${data.handle.ip} ${data.handle.shortid}`)}`),
 				'disconnect': () => console.log(`${date} DISCONNECTED     ${chalk.gray(`${data.handle.ip} ${data.handle.shortid} ${data.handle.login}`)}`),
@@ -138,13 +143,46 @@ module.exports = class Functions{
 					console.log(`${date} ${data.handle.method} ${status} ${data.handle.path} ${data.handle.ip}`);
 				}
 
-			};
+			},
+			templates = {
+				connect: "CONNECTED $1 $2",
+				disconnect: "DISCONNECTED $1 $2 $3",
+				auth: "AUTH $5 ",
+				command: "$6 $5 $1 $2 $3",
+				login: "",
+				logout: "",
+				err: "",
+				info: "$0",
+				req: ""
+			}
 
-		if (actions[data.action]) {
-			actions[data.action]()
-		} else {
-			console.log(data)
+		if (templates[data.action]) {
+			console.log((function (template) {
+				for (let i = 0; i <= 6; i++){
+					// console.log(template.indexOf(`\$${i}`))
+					if(template.indexOf(`\$${i}`)!=-1){
+						template = template.replace(`\$${i}`, (function(){
+							switch(i){
+								case 0: return chalk.cyan(data.data)
+								case 1: return chalk.gray(data.handle.ip)
+								case 2: return chalk.gray(data.handle.shortid)
+								case 3: return chalk.gray(data.handle.login)
+								case 4: return data.handle.authStat === 0 ? 'OK' : (data.handle.authStat === 1 ? 'ERR' : (data.handle.authStat === 2 ? 'FAILED' : '?'))
+								case 5: return data.stat === 0 ? '' : (data.stat === 1 ? '?' : (data.stat === 2 ? 'ERR' : '?'))
+								case 6: return data.com.req.com
+							}
+						})())
+					}
+				}
+				return `${date} ${template}`
+			})(templates[data.action]))
 		}
+
+		// if (actions[data.action]) {
+		// 	actions[data.action]()
+		// } else {
+		// 	console.log(data)
+		// }
 
 	}
 

@@ -7,6 +7,19 @@ const STAGE_D = 2 // development
 const STAGE_B = 3 // bugs / not working
 
 module.exports = {
+	test: {
+		f: com => {
+			com.insert(['whatever', [1,2]], {flag: 1});
+			com.end();
+		},
+		desc: "block test",
+		args: [],
+		man: "user manual",
+		permissions: PERM_FULL,
+		stage: STAGE_F
+
+	},
+
 	motd: {
 		f: com => {
 			com.insert('hey', {
@@ -77,7 +90,7 @@ module.exports = {
 			try{
 				var e = eval(com.req.arg.join(" "));
 				com.insert(e, {
-					flag: 9
+					flag: 1
 				});
 			}catch(error){
 				com.insert(error.message, {
@@ -193,7 +206,7 @@ module.exports = {
 	devices: {
 		f: com => {
 			com.insert({Network: db.stats.network, Offline: db.stats.offline}, {
-				flag: 9 // toTree
+				flag: 1 // toTree
 			});	com.end();
 		},
 		desc: "Display network devices connection history",
@@ -658,7 +671,7 @@ fs.readFile(loc, function (err, data){
 		coms({
 			data: enddata,
 			arg: [],
-			flag: 2
+			flag: 1
 		}, socket);
 	}
 });
@@ -809,7 +822,7 @@ for(var i = 0; i< info.network.length; i++){
 l = '<ul class="ascii"><li><txred>Network</txred><ul class="info10">'+l+'<li><txblu>Raspberry</txblu><ul><li><txred>I2C</txred><ul></ul></li><li><txred>Serial</txred><ul></ul></li></ul></li></ul></li></ul>';
 com.insert({
 	data: {Network: info.network},
-	flag: 9 // toTree
+	flag: 1 // toTree
 });	com.end();
 
 break;
