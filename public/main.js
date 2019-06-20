@@ -1358,20 +1358,22 @@ class Con {
 			commands: [""],
 
 			push(com) {
-				this.commands.push(com)
+				this.commands.splice(1, 0, com)
 				this.counter = 0
 				return this
 			},
 
 			increment() {
-				this.counter++
-				if (this.counter > this.commands.length - 1) this.counter = 0
+				// this.counter++
+				if (this.counter < this.commands.length - 1) this.counter++
+
 				return this
 			},
 
 			decrement() {
-				this.counter--
-				if (this.counter < 0) this.counter = this.commands.length - 1
+				// this.counter--
+				if (this.counter > 0) this.counter--
+
 				return this
 			},
 
@@ -1380,12 +1382,12 @@ class Con {
 			},
 
 			get up() {
-				this.decrement()
+				this.increment()
 				return this.commands[this.counter]
 			},
 
 			get down() {
-				this.increment()
+				this.decrement()
 				return this.commands[this.counter]
 			}
 
