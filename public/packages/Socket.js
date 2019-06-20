@@ -14,6 +14,32 @@ class Request {
 	}
 }
 
+export var commands = {
+	'socket': com => {
+		var actions = {
+			'connect': ()=> {
+				if (com.con.Socket.socket.disconnected) {
+					com.con.Socket.socket.connect()
+					com.log(`Connecting to ${com.con.Socket.hostname}`, 'info')
+				} else {
+					com.log(`Socket already connected`, 'error')
+				}
+				
+			},
+			'disconnect': () => {
+				if (com.con.Socket.socket.connected){
+					com.con.Socket.socket.disconnect()
+					com.log(`Disconnecting from ${com.con.Socket.hostname}`, 'warning')
+				} else {
+					com.log(`Socket not connected`, 'error')
+				}
+				
+			}
+		}
+		actions[com.arg[0]]()
+	}
+}
+
 export default class Socket {
 
 	constructor(con) {
