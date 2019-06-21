@@ -163,26 +163,6 @@ function download(content, filename) {
 	a.remove()
 }
 
-function getLocal(key) {
-	return JSON.parse(localStorage.getItem(key))
-}
-
-function setLocal(key, value) {
-	value = JSON.stringify(value)
-	localStorage.setItem(key, value)
-	return value
-}
-
-function getSession(key) {
-	return JSON.parse(sessionStorage.getItem(key))
-}
-
-function setSession(key, value) {
-	value = JSON.stringify(value)
-	sessionStorage.setItem(key, value)
-	return value
-}
-
 function newScript(url) {
 	return new Promise((resolve, reject) => {
 		var script = document.createElement('script');
@@ -212,6 +192,33 @@ function requiresStyle(url) {
 		document.head.appendChild(link); //or something of the likes
 	})
 
+}
+
+class Storage {
+	static get Local() {
+		return {
+			get(key) {
+				return JSON.parse(localStorage.getItem(key))
+			},
+			set(key, value) {
+				value = JSON.stringify(value)
+				localStorage.setItem(key, value)
+				return value
+			}
+		}
+	}
+	static get Session() {
+		return {
+			get(key) {
+				return JSON.parse(sessionStorage.getItem(key))
+			},
+			set(key, value) {
+				value = JSON.stringify(value)
+				sessionStorage.setItem(key, value)
+				return value
+			}
+		}
+	}
 }
 
 class Waiter {
