@@ -3,13 +3,30 @@ export var requires = {
 	styles: [
 		'tree.css'
 	],
+	modules: [
+		// 'Fontello'
+	]
+}
+
+var colors = {
+	'number': 'txred',
+	'string': 'txgrn',
+	'boolean': 'txyel',
+	'function': 'txcya',
+	'array': 'txyel',
+	'object': 'txblu',
+	'regex': 'txprp',
+	'null': 'txxblk',
+	'undefined': 'txxblk',
+	'empty': 'txxprp',
+	'last': 'txxprp',
+	'fname': 'txxprp',
+	'default': 'txxblk'
 }
 
 export default class Tree {
 	constructor(data) {
 		this.data = data
-
-		// requiresStyle('tree.css')
 
 		if (this._typeOf(data) != "array" && this._typeOf(data) != "object")
 			this.$ = $("<span></span>").append(this._contentType(data)).append(": ").append(`${data}`)
@@ -23,6 +40,21 @@ export default class Tree {
 						this._recur(data, 1)
 					)
 			)
+
+		// tree collapse subtree click handling
+		this.$.on("click", ".collapse", function (e) {
+			var c = $(this);
+
+			c.siblings("ul").toggle(200)
+			if (c.children("i").hasClass("icon-minus-squared")) {
+				c.children("i").removeClass();
+				c.children("i").addClass("icon-plus-squared");
+			} else {
+				c.children("i").removeClass();
+				c.children("i").addClass("icon-minus-squared");
+			}
+
+		})
 
 	}
 
@@ -46,16 +78,16 @@ export default class Tree {
 
 		switch (type) {
 
-			case 'number': return $("<txred></txred>").append(name ? name : "number")
-			case 'string': return $("<txgrn></txgrn>").append(name ? name : "string")
-			case 'boolean': return $("<txyel></txyel>").append(name ? name : "boolean")
-			case 'function': return $("<txcya></txcya>").append(name ? name : "function")
-			case 'array': return $("<txyel></txyel>").append(name ? name : "array")
-			case 'object': return $("<txblu></txblu>").append(name ? name : "object")
-			case 'regex': return $("<txprp></txprp>").append(name ? name : "regex")
-			case 'null': return $("<txxblk></txxblk>").append(name ? name : "null")
-			case 'undefined': return $("<txxblk></txxblk>").append(name ? name : "undefined")
-			default: return $("<txxblk></txxblk>").append(name ? name : "?")
+			case 'number': return $(`<${colors.number}></${colors.number}>`).append(name ? name : 'number')
+			case 'string': return $(`<${colors.string}></${colors.string}>`).append(name ? name : 'string')
+			case 'boolean': return $(`<${colors.boolean}></${colors.boolean}>`).append(name ? name : 'boolean')
+			case 'function': return $(`<${colors.function}></${colors.function}>`).append(name ? name : 'function')
+			case 'array': return $(`<${colors.array}></${colors.array}>`).append(name ? name : 'array')
+			case 'object': return $(`<${colors.object}></${colors.object}>`).append(name ? name : 'object')
+			case 'regex': return $(`<${colors.regex}></${colors.regex}>`).append(name ? name : 'regex')
+			case 'null': return $(`<${colors.null}></${colors.null}>`).append(name ? name : 'null')
+			case 'undefined': return $(`<${colors.undefined}></${colors.undefined}>`).append(name ? name : 'undefined')
+			default: return $(`<${colors.default}></${colors.default}>`).append(name ? name: '?')
 		}
 
 	}
@@ -107,7 +139,7 @@ export default class Tree {
 							$("<li></li>")
 								.append(this._contentType(content, key))
 								.append(": ")
-								.append(`<txxprp>[empty]</txxprp>`)
+								.append(`<${colors.empty}>[empty]</${colors.empty}>`)
 						)
 					} else { // content not empty
 						if (depth > maxd) { // is max depth reached
@@ -115,7 +147,7 @@ export default class Tree {
 								$("<li></li>")
 									.append(this._contentType(content, key))
 									.append(": ")
-									.append(`<txxprp>${isWhat(content)}</txxprp>`)
+									.append(`<${colors.last}>${isWhat(content)}</${colors.last}>`)
 							)
 						} else { // max depth not reached
 							$list.append( // continue recursion
@@ -137,7 +169,7 @@ export default class Tree {
 							.append(this._contentType(content, key))
 							.append(": ")
 							.append(
-								`<txxprp>${isWhat(content)}</txxprp>`
+								`<${colors.fname}>${isWhat(content)}</${colors.fname}>`
 							)
 					)
 					break;

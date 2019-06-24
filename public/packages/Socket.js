@@ -44,60 +44,51 @@ export default class Socket {
 
 	constructor(con) {
 		this.con = con
-		// throw new Error('test')
-		// socket event register function modification (pass additional parameter)
-		// this.socket.originalOn = this.socket.on;
-		// this.socket.on = function (event, data, callback) {
-		// 	return this.originalOn.call(this, event, (e) => callback(e, data));
-		// };
-		// newScript()
-		// 	.then(() => {
-				this.socket = io('/')
+		this.hostname = '/'
+		this.socket = io(`${this.hostname}`)
 
-				// socket connecting start event
-				this.socket.on('connecting', (data) => con.log("Conecting...", "info", 2));
-				this.socket.on("connect_error", (data) => con.log(data, "error"))
+		this.waiting = {}
 
-				this.socket.on('auth', d => this.auth(d))
-				this.socket.on('com', d => this._receive(d))
-				this.socket.on('silent', d => this._silent(d))
+		this.socket.on('auth', d => this.auth(d))
+		this.socket.on('com', d => this._receive(d))
+		this.socket.on('silent', d => this._silent(d))
 
-				// socket disconnected event
-				this.socket.on("disconnect", (data) => {
-					con.log(`Disconnected from server: ${data}`, "warning")
-					this.socket.connect()
-				})
+		this.socket.on('connecting', data => con.log('Conecting...', 'info', 2));
+		this.socket.on('connect_error', data => con.log(data, 'error'))
 
-				// socket succesfully connected event
-				this.socket.on('connect', (data) => {
 
-					con.log("Conected to the server", "ok")
-					if (!this.tryAuth()) this.motd()
-					else con.log("Credentials detected, waiting for auth before motd", "info", 2)
+		this.socket.on('disconnect', data => {
+			con.log(`Disconnected from server: ${data}`, 'warning')
+		})
 
-				});
-			// })
-	// 		.catch(err=>{
-	// 			this.con.log(`socket.io.js download failed: ${err}`, 'error')
-	// 		})
+		this.socket.on('connect', data => {
+
+			con.log("Conected to the server", 'ok')
+			if (!this.tryAuth()) this.motd()
+			else con.log("Credentials detected, waiting for auth before motd", "info", 2)
+
+		});
 	}
 
 	motd() {
 		if (this.con.first) return
 		this.con.first = true
-		this.con.executeCom("motd");
+		this.con.commandlineParse('motd');
 		if (location.hash != "") {
 			this.con.log(`Executing command from URI (${location.hash.slice(1)})`, "info", 3)
 			this.con.executeCom(decodeURIComponent(location.hash.slice(1)));
 		}
 	}
 
-	_silent(res){
-		this.con.unpack(res)
-	}
-
-	_receive(res) {
-		this.con.getCom(res.res.id).update(res);
+	getSilent(data){
+		return new Promise((resolve, reject) => {
+			var out = {
+				query: data,
+				id: makeID(5)
+			}
+			this.waiting[out.id] = {resolve: resolve, reject: reject}
+			this.socket.emit('silent', out)
+		})
 	}
 
 	send(com) {
@@ -125,7 +116,7 @@ export default class Socket {
 		return this.con.udataExp
 	}
 
-	auth(udata) {
+	_auth(udata) {
 		con.log("Auth data received", "ok", 2);
 		this.con.udata = udata;
 		this.con.uAuth(true)
@@ -133,6 +124,18 @@ export default class Socket {
 		// if (!this.fAuth) this.firstAuth()
 		this.con.motd()
 	}
+
+	_receive(res) {
+		this.con.getCom(res.res.id).update(res);
+	}
+
+	_silent(res) {
+		// this.con.unpack(res)
+		this.waiting[res.id].resolve(res)
+		delete this.waiting[res.id]
+	}
+
+	_broadcast(data) {}
 
 	tryAuth() {
 		if (con.credentials) {
