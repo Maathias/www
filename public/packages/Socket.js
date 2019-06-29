@@ -49,9 +49,10 @@ export default class Socket {
 
 		this.waiting = {}
 
-		this.socket.on('auth', d => this.auth(d))
-		this.socket.on('com', d => this._receive(d))
-		this.socket.on('silent', d => this._silent(d))
+		this.socket.on('auth', d => this._authReceive(d))
+		this.socket.on('com', d => this._comReceive(d))
+		this.socket.on('req', d => this._reqReceive(d))
+		this.socket.on('broadcast', d => this._broadcast(d))
 
 		this.socket.on('connecting', data => con.log('Conecting...', 'info', 2));
 		this.socket.on('connect_error', data => con.log(data, 'error'))
@@ -64,34 +65,35 @@ export default class Socket {
 		this.socket.on('connect', data => {
 
 			con.log("Conected to the server", 'ok')
-			if (!this.tryAuth()) this.motd()
-			else con.log("Credentials detected, waiting for auth before motd", "info", 2)
+			this._authSend()
+			// if (!this._authSend()) this.motd()
+			// else con.log("Credentials detected, waiting for auth before motd", "info", 2)
 
 		});
 	}
 
-	motd() {
-		if (this.con.first) return
-		this.con.first = true
-		this.con.commandlineParse('motd');
-		if (location.hash != "") {
-			this.con.log(`Executing command from URI (${location.hash.slice(1)})`, "info", 3)
-			this.con.executeCom(decodeURIComponent(location.hash.slice(1)));
-		}
-	}
+	// motd() {
+	// 	if (this.con.first) return
+	// 	this.con.first = true
+	// 	this.con.commandlineParse('motd');
+	// 	if (location.hash != "") {
+	// 		this.con.log(`Executing command from URI (${location.hash.slice(1)})`, "info", 3)
+	// 		this.con.executeCom(decodeURIComponent(location.hash.slice(1)));
+	// 	}
+	// }
 
-	getSilent(data){
+	reqSend(data){
 		return new Promise((resolve, reject) => {
 			var out = {
 				query: data,
 				id: makeID(5)
 			}
 			this.waiting[out.id] = {resolve: resolve, reject: reject}
-			this.socket.emit('silent', out)
+			this.socket.emit('req', out)
 		})
 	}
 
-	send(com) {
+	comSend(com) {
 		// if (this.res) return; // if response is defined, stop
 
 		// this._startLoading(); // start loading animation
@@ -116,7 +118,17 @@ export default class Socket {
 		return this.con.udataExp
 	}
 
-	_auth(udata) {
+	_broadcast(cast){
+		var actions = {
+			'log': ()=>{
+				this.con.log(cast.data.data, cast.data.type)
+			}
+		}
+		if(actions[cast.type])
+			actions[cast.type]()
+	}
+	
+	_authReceive(udata) {
 		con.log("Auth data received", "ok", 2);
 		this.con.udata = udata;
 		this.con.uAuth(true)
@@ -125,19 +137,17 @@ export default class Socket {
 		this.con.motd()
 	}
 
-	_receive(res) {
+	_comReceive(res) {
 		this.con.getCom(res.res.id).update(res);
 	}
 
-	_silent(res) {
+	_reqReceive(res) {
 		// this.con.unpack(res)
 		this.waiting[res.id].resolve(res)
 		delete this.waiting[res.id]
 	}
 
-	_broadcast(data) {}
-
-	tryAuth() {
+	_authSend() {
 		if (con.credentials) {
 			con.socket.emit("auth".credentials);
 			con.log("Requesting authentication", "info", 2);

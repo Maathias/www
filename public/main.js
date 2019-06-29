@@ -128,41 +128,6 @@ function timestamp() {
 		.append(date('tiny') + ' ')
 }
 
-function download(content, filename) {
-	/**
-	 * Download variable as file
-	 * @param {mixed} content any variable
-	 * @param {string} filename name of downloaded file
-	 * 
-	 * @returns {undefined}
-	 */
-
-	var createObjectURL = (window.URL || window.webkitURL || {}).createObjectURL || function () { };
-	var blob = null;
-	var mimeString = "application/octet-stream";
-	window.BlobBuilder = window.BlobBuilder ||
-		window.WebKitBlobBuilder ||
-		window.MozBlobBuilder ||
-		window.MSBlobBuilder;
-
-
-	if (window.BlobBuilder) {
-		var bb = new BlobBuilder();
-		bb.append(content);
-		blob = bb.getBlob(mimeString);
-	} else {
-		blob = new Blob([content], { type: mimeString });
-	}
-	var url = createObjectURL(blob);
-	var a = document.createElement("a");
-	a.href = url
-	a.download = filename;
-	a.innerHTML = "";
-	document.body.appendChild(a);
-	a.click()
-	a.remove()
-}
-
 function newScript(url) {
 	return new Promise((resolve, reject) => {
 		var script = document.createElement('script');
@@ -184,7 +149,6 @@ function requiresStyle(url) {
 		if ($(`link[href='${url}']`).length == 1) return
 		var link = document.createElement('link');
 		link.onload = function () {
-			console.log('resolve')
 			resolve()
 		};
 		link.href = url;
@@ -219,190 +183,50 @@ class Storage {
 			}
 		}
 	}
+	static get Cookie() {
+		return {
+			get(key) {
+				var name = key + "=";
+				var decodedCookie = decodeURIComponent(document.cookie);
+				var ca = decodedCookie.split(';');
+				for (var i = 0; i < ca.length; i++) {
+					var c = ca[i];
+					while (c.charAt(0) == ' ') {
+						c = c.substring(1);
+					}
+					if (c.indexOf(name) == 0) {
+						return c.substring(name.length, c.length);
+					}
+				}
+				return undefined;
+			},
+			set(key, value, exdays) {
+				var d = new Date();
+				d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+				var expires = "expires=" + d.toUTCString();
+				document.cookie = key + "=" + value + ";" + expires + ";path=/";
+			}
+		}
+	}
 }
 
 class Waiter {
-	constructor(list, f){
+	constructor(list, f) {
 		this.list = {}
 		this.callback = f
-		for(let n of list){
+		for (let n of list) {
 			this.list[n] = false
 		}
 	}
 
-	update(name){
+	update(name) {
 		this.list[name] = true
-		for(let el in this.list){
-			if(this.list[el] == false)
+		for (let el in this.list) {
+			if (this.list[el] == false)
 				return false
 		}
 		this.callback()
 	}
-}
-
-class Elements {
-	constructor($wind) {
-
-		if (typeof $wind == "undefined") {
-			var $wind = $("<div></div>")
-				.addClass("wind")
-				.append(
-					$("<input>")
-						.addClass("jsonl")
-						.prop("type", "file")
-						.hide()
-				)
-				.append(
-					$("<div></div>")
-						.addClass("commands")
-				)
-				.append(
-					$("<div></div>")
-						.addClass("commline")
-						.append(
-							$("<span></span>")
-								.addClass("ud")
-								.append(
-									$("<span></span>")
-										.addClass('comuser')
-										.append(
-											$("<txcya></txcya>")
-												.append('guest')
-										)
-								)
-								.append("@")
-								.append(
-									$("<txgrn></txgrn>")
-										.append(document.title)
-								)
-								.append(":")
-								.append(
-									$("<txblu></txblu>")
-										.addClass("commpath")
-										.append("~")
-								)
-								.append(" $ ")
-
-						)
-						.append(
-							$("<input>")
-								.addClass("commin")
-								.prop("autocomplete", "off")
-								.prop("autocorrect", "off")
-								.prop("autocapitalize", "off")
-								.prop("spellcheck", false)
-								.prop("autofocus", true)
-						)
-					// .append(
-					// 	$("<span></span>")
-					// 		.addClass("icons")
-					// 		.append(
-					// 			$("<i></i>").addClass("icon-volume-up"),
-					// 			$("<i></i>").addClass("icon-lock-open"),
-					// 			$("<i></i>").addClass("icon-trash"),
-					// 			$("<i></i>").addClass("icon-level-down"),
-					// 			$("<i></i>").addClass("icon-unlink")
-					// 		)
-					// )
-				)
-			$("body").append($wind);
-		}
-
-		this.$wind = $wind;
-		this.$commands = $wind.children(".commands");
-		this.$ud = $wind.children(".commline").children(".ud")
-		this.$commuser = $wind.children(".commline").children(".ud").children(".comuser");
-		this.$commpath = $wind.children(".commline").children(".ud").children(".commpath");
-		this.$commin = $wind.children(".commline").children(".commin");
-		this.$jsonl = $wind.children(".jsonl");
-
-		// this.$commin.on("blur", function () {
-		// 	if ($(this).closest(".wind").data("con").scroll) {
-		// 		this.focus();
-		// 	}
-		// })
-
-		var icons = $wind.children(".commline").children(".icons");
-
-		// this.icons = {};
-
-		// this.icons.$trash = icons.children("i.icon-trash");
-		// this.icons.$trash.on("click", function () {
-		// 	$(this).closest(".wind").data("con").clear();
-		// })
-
-		// this.icons.$levelDown = icons.children("i.icon-level-down");
-		// this.icons.$levelDown.on("click", function () {
-		// 	$(this).closest(".wind").data("con").scrollBottom(true);
-		// })
-
-		// this.icons.$volume = icons.children("i.icon-volume-up");
-
-		// this.icons.$lock = icons.children("i.icon-lock-open");
-		// this.icons.$lock.change = function () {
-		// 	var con = $wind.data("con")
-		// 	if (!con.scroll) {
-		// 		this.removeClass();
-		// 		this.addClass("icon-lock-open");
-		// 		con.scroll = true;
-		// 		con.elements.$commin.focus();
-		// 	} else {
-		// 		this.removeClass();
-		// 		this.addClass("icon-lock");
-		// 		con.scroll = false;
-		// 	}
-		// }
-		// this.icons.$lock.on("click", function () {
-		// 	$(this).closest(".wind").data("con").elements.icons.$lock.change();
-		// });
-
-		// this.icons.$connection = icons.children("i.icon-unlink");
-		// this.icons.$connection.blink = function () {
-		// 	this.addClass("txgrn glow");
-		// 	setTimeout(function (icon) {
-		// 		icon.removeClass("txgrn glow");
-		// 	}, 200, this);
-		// }
-		// this.icons.$connection.on("click", function () {
-		// 	$(this).closest(".wind").data("con").executeCom("connection");
-		// })
-
-		// this.icons.$lock.enable = function () {
-		// 	this.removeClass();
-		// 	this.addClass("icon-lock-closed");
-		// }
-		// this.icons.$lock.disable = function () {
-		// 	this.removeClass();
-		// 	this.addClass("icon-lock");
-		// }
-
-		// this.icons.$connection.enable = function () {
-		// 	this.removeClass();
-		// 	this.addClass("icon-link");
-		// }
-		// this.icons.$connection.disable = function () {
-		// 	this.removeClass();
-		// 	this.addClass("icon-unlink");
-		// }
-
-		this.$commline = $wind.children(".commline");
-		this.$commline.enable = function () {
-			this.children(".commin").prop('disabled', false);
-			this.css("filter", "grayscale(0%)");
-		}
-		this.$commline.disable = function () {
-			this.children(".commin").prop('disabled', true);
-			this.css("filter", "grayscale(1000%)");
-		}
-		this.$commuser.change = function (user, badge) {
-			this.html(user);
-			this.removeClass();
-			this.addClass(badge);
-			this.closest(".wind").data("con").updateInputWidth()
-		}
-
-	}
-
 }
 
 class Com {
@@ -431,7 +255,7 @@ class Com {
 		this.__proto__.log = this.con.log
 
 		// con.onload = function(){
-			this._init()
+		this._init()
 		// }
 		// this._append()
 		// this._init()
@@ -481,19 +305,22 @@ class Com {
 	_init() {
 
 		this._append()
+		this._startLoading()
 
 		if (this.con.Functions[this.c]) { // offline command is available
 			this.con.Functions[this.c](this)
 		} else { // send command to server
-			// this.log("Local command not found", 'warning', 3)
+			this.log("Local command not found", 'warning', 2)
 			if (this.con.Socket) { // check for module
 				if (this.con.Socket.socket.connected) { // check for connection
-					this.con.Socket.send(this)
+					this.con.Socket.comSend(this)
 				} else {
 					this.log("Server disconnected", 'error')
+					this._end()
 				}
 			} else {
 				this.log("Socket module not available", 'error')
+				this._end()
 			}
 		}
 
@@ -590,18 +417,38 @@ class Com {
 		this.blocks[res.meta.n] = res
 		this._timeout(true)
 
-		this._addBlock(this._block(await this.con.unpack(res), res.meta.n))
+		this._addBlock(this._block(await this.unpack(res), res.meta.n))
 		// this.con.scrollBottom(false); // scroll to end of page (non-force)
 	}
-	
-	_block(data, n){
+
+	async unpack(res) {
+		switch (res.meta.flag) {
+			default:
+			case 0: // plaintext
+				return res.data
+			case 1: // Tree
+				await this.con._requires('Tree')
+				return new this.con.Classes.Tree(res.data).$
+			case 6: // log response
+				this.log(res.data.data, res.meta.arg);
+				break;
+
+			case 9: // toTree
+			// return toTree(res.data);
+
+			case 10: // toTable
+			// return toTable(res.data);
+		}
+	}
+
+	_block(data, n) {
 		return $(`<div data-n="${n}"</div>`)
 			.append(data)
 			.append(timestamp())
 	}
 
-	_addBlock(block){
-		var children = this.$sr.children(),
+	_addBlock(block) {
+		var children = this.$sr.find('[data-n]'),
 			len = children.length
 		if ((len > 0) && (parseInt(block.attr('data-n')) != -1)) {
 			for (let child of children) {
@@ -721,7 +568,54 @@ class Con {
 	constructor($wind) {
 
 		this.id = makeID(6) // Con ID
-		this.elements = new Elements($wind); // DOM elements object
+		this.elements = {}
+
+		this.elements.$wind = $("<div></div>")
+			.addClass("wind")
+			.append(
+				this.elements.$commands = $("<div></div>")
+					.addClass("commands")
+			)
+			.append(
+				this.elements.$commline = $("<div></div>")
+					.addClass("commline")
+					.append(
+						this.elements.$ud = $("<span></span>")
+							.addClass("ud")
+							.append(
+								this.elements.$commuser = $("<span></span>")
+									.addClass('comuser')
+									.append(
+										$("<txcya></txcya>")
+											.append('guest')
+									)
+							)
+							.append("@")
+							.append(
+								$("<txgrn></txgrn>")
+									.append(document.title)
+							)
+							.append(":")
+							.append(
+								this.elements.$commpath = $("<txblu></txblu>")
+									.addClass("commpath")
+									.append("~")
+							)
+							.append(" $ ")
+
+					)
+					.append(
+						this.elements.$commin = $("<input>")
+							.addClass("commin")
+							.prop("autocomplete", "off")
+							.prop("autocorrect", "off")
+							.prop("autocapitalize", "off")
+							.prop("spellcheck", false)
+							.prop("autofocus", true)
+					)
+			)
+
+		$('body').append(this.elements.$wind)
 
 		// commands input history
 		this.history = {
@@ -765,22 +659,65 @@ class Con {
 
 		}
 
+		// module managment
+		this.modules = {
+			all: {},
+			_new(name) {
+				this.all[name] = {
+					state: 'uninstalled',
+					type: undefined,
+
+					callbacks: []
+				}
+			},
+			update(name, data) {
+				if (!this.all[name]) this._new(name)
+
+				this.all[name] = { ...this.all[name], ...data }
+				if (data.state) {
+					for (let callback of this.all[name].callbacks) {
+						if (this.all[name].state == callback.state) {
+							callback.resolve(this.info(name))
+						}
+					}
+				}
+
+
+			},
+			info(name) {
+				if (!this.all[name]) this._new(name)
+				return {
+					state: this.all[name].state,
+					type: this.all[name].type,
+					state: this.all[name].state,
+				}
+			},
+			callback(name, state) {
+				return new Promise((resolve, reject) => {
+					if (!this.all[name]) this._new(name)
+					if (state == this.all[name].state) {
+						resolve(this.info(name))
+						return
+					}
+					this.all[name].callbacks.push({ state, resolve, reject })
+				})
+			}
+		}
+
+		this.settings = {}
+
 		this.Functions = {};
 		this.Classes = {};
 
-		this.m = undefined;	// last m recipient
 		this.coms = []; // executed Coms list
 		this.scroll = true; // block scrollBottom flag
-		this.jsond = undefined; // user loaded json data
 		this.timeout = 16000 // Com response waiting time [ms]
-		this.fConnect = false; // first connect event flag
-		// this.fAuth = false; // first auth event flag
 		this.first = false
-		this.verbose = Config.verbose; // log display level
+		this.verbose = 2; // log display level
 
 		// credentials
-		this.credentials = getLocal('credentials')
-		this.udata = getLocal('udata') || {
+		this.credentials = Storage.Local.get('credentials')
+		this.udata = Storage.Local.get('udata') || {
 			badge: 'txcya',
 			login: 'guest',
 			group: 9,
@@ -789,38 +726,23 @@ class Con {
 		}
 
 		this.keymap = {
-			'2l': () => this.clear()
+			'2l': () => this.clear(),
+			'0Escape': () => con.elements.$commin.val(""),
+			'0ArrowUp': () => con.commandHistory(true),
+			'0ArrowDown': () => con.commandHistory(false),
+			'0Enter': () => con.commandlineParse()
 		}
-		
-		// var c = this
-		// this.elements.$wind[0].onload = ()=>{
-		// 	// console.log('ready')
-		// 	// c._ready()`
-		// }
 
-		// this.elements.$wind[0].onload = alert
 		this.elements.$commline.ready(() => {
-			// alert()
 			this._ready()
 		});
-		// this._ready()
 
 	}
 
-	removeCom(id) {
-
-		this.log("Removing Com #${id} element", "warning", 2);
-		for (let key in this.coms) {
-			if (this.coms[key].id === id) {
-				this.coms[key].remove();
-				this.log("Com #${id} removed", "info", 2);
-				return true
-			}
-		}
-
-		this.log(`Com #${id} element not found`, "error", 2);
-		return false
-
+	hijack() {
+		return new Promise((resolve, reject) => {
+			this.hijacked = [resolve, reject]
+		})
 	}
 
 	getCom(id) {
@@ -849,16 +771,10 @@ class Con {
 
 	}
 
-	executeCom(val) {
-
-		this.log(`Force Com execute: ${val}`, "info", 3);
-		this.elements.$commin.val(val);
-		this.commandlineParse();
-
-	}
-
 	log(data, opt, lvl) {
-		// console.log(getStackTrace())
+		var source = getStackTrace().toString().match(/packages\/([A-Z]\S+)\.js/)
+		source = source != null ? source[1] : 'main'
+
 		var lvl = isDefined(lvl, 1);
 
 		if (lvl > this.verbose) return
@@ -867,19 +783,26 @@ class Con {
 
 		switch (opt) {
 			default:
-			case 'info': opt = ['txblu', 'Info']; break;
-			case 'warning': opt = ['txyel', 'Warning']; break;
-			case 'error': opt = ['txred', 'Error']; break;
-			case 'ok': opt = ['txgrn', 'OK']; break;
-			case 'prompt': opt = ['txcya', '?']; break;
+			case 'info': opt = ['blu', 'Info']; break;
+			case 'warning': opt = ['yel', 'Warning']; break;
+			case 'error': opt = ['red', 'Error']; break;
+			case 'ok': opt = ['grn', 'OK']; break;
+			case 'prompt': opt = ['cya', '?']; break;
+			case 'server': opt = ['red', 'Server']; break;
+			case 'blank': break;
 		}
 
-		var out = $("<div></div>")
+		
+		var out = opt == 'blank' ? $("<div></div>")
+			.addClass('inline')
+			.append(data)	
+			:
+			$("<div></div>")
 			.addClass('inline')
 			.append(
 				timestamp(),
 				$('<tx></tx>')
-					.addClass(opt[0])
+					.addClass(`tx${opt[0]}`)
 					.append("#".repeat(lvl))
 					.append(` ${opt[1]}: `)
 			)
@@ -909,12 +832,30 @@ class Con {
 
 	}
 
-	commandlineParse() { // command send event
+	prompt(prompt) {
+		return new Promise((resolve, reject) => {
+			this.log(prompt, 'prompt')
+			this.hijack()
+				.then(out => {
+					resolve(out)
+				})
+		})
+	}
+
+	commandlineParse(override) { // command send event
 
 		if (this.elements.$commin.is(":hidden")) return;	// if commandline is blocked (hidden), stop executing
 
 		var raw = this.elements.$commin.val();	// get raw input
 		this.elements.$commin.val("");	// clear commandline input
+
+		if (this.hijacked) {
+			this.hijacked[0](raw)
+			delete this.hijacked
+			return
+		}
+
+		if (override) raw = override
 
 		if (raw == "") return;
 
@@ -925,7 +866,7 @@ class Con {
 				c = arg.shift();	// get command only
 		} else { // no arguments given
 			var arg = [],
-			c = raw.toLowerCase()
+				c = raw.toLowerCase()
 		}
 
 		this.coms.push(new Com({
@@ -934,26 +875,6 @@ class Con {
 			arg: arg
 		}, this))
 
-	}
-
-	async unpack(res) {
-		switch (res.meta.flag) {
-			default:
-			case 0: // plaintext
-				return res.data
-			case 1: // Tree
-				await this._requires('Tree')
-				return new this.Classes.Tree(res.data).$
-			case 6: // log response
-				// this.log(res.data.data, res.meta.arg);
-				break;
-
-			case 9: // toTree
-			// return toTree(res.data);
-
-			case 10: // toTable
-			// return toTable(res.data);
-		}
 	}
 
 	getScroll() { // get scroll distance to bottom
@@ -966,19 +887,19 @@ class Con {
 
 	scrollBottom(f) { // scroll to the bottom
 
-		let force = isDefined(f, false);
-		if (force) return;
+		// let force = isDefined(f, false);
+		// if (force) return;
 
-		let a = this.elements.$commands.children();
-		let b = this.elements.$commands.children().children();
+		// let a = this.elements.$commands.children();
+		// let b = this.elements.$commands.children().children();
 
-		var to = 0;
-		for (let index of a)
-			to += index.scrollHeight
-		for (let index of b)
-			to += index.scrollHeight
+		// var to = 0;
+		// for (let index of a)
+		// 	to += index.scrollHeight
+		// for (let index of b)
+		// 	to += index.scrollHeight
 
-		this.elements.$commands.stop().animate({ scrollTop: to }, 200, 'swing', function () { });
+		// this.elements.$commands.stop().animate({ scrollTop: to }, 200, 'swing', function () { });
 
 	}
 
@@ -989,42 +910,24 @@ class Con {
 	}
 
 	commandHistory(key) {
-		this.elements.$commin.val(key == 38 ? this.history.up : (key == 40 ? this.history.down : ""));
+		this.elements.$commin.val(key ? this.history.up : this.history.down);
 		this.elements.$commin.focus();
-	}
-
-	readJson(data) {
-		var file = data.target.files[0];
-		var reader = new FileReader();
-
-		reader.con = $(this).closest(".wind").data("con");
-		reader.onload = function (event) {
-			try {
-				this.con.jsond = JSON.parse(event.target.result);
-				this.con.log("JSON loaded", "ok");
-			} catch (error) {
-				this.con.log(`JSON parsing error: ${error}`, "error");
-			}
-
-		}
-		reader.readAsText(file, "UTF-8");
-
 	}
 
 	_getPackage(name) {
 		return new Promise((resolve, reject) => {
-
+			this.modules.update(name, { state: 'downloading' })
 			this.log(`Requesting ${name} module`, 'info')
 			import(`./packages/${name}.js`)
 				.then(mod => {
-					var done = ()=>{
+					var done = () => {
 						switch (mod.type) {
 							case 'sub':
-								try{
-									this.log(`Starting ${name} module`, 'info')
+								try {
 									this[name] = new mod.default(this)
-								}catch(err){
+								} catch (err) {
 									this.log(`Module ${name} failed: ${err}`, 'error')
+									return
 								}
 								break;
 							case 'class':
@@ -1036,15 +939,16 @@ class Con {
 								}
 								break;
 						}
-						if(mod.commands){
+						if (mod.commands) {
 							for (let f in mod.commands) {
 								this.Functions[f] = mod.commands[f]
 							}
 						}
+						this.modules.update(name, { state: 'installed' })
 						this.log(`Downloaded ${name} module`, 'ok')
 						resolve()
 					}
-					
+					this.modules.update(name, { state: 'installing', type: mod.type })
 					if (mod.requires) {
 						var list = []
 						for (let what in mod.requires) {
@@ -1070,119 +974,75 @@ class Con {
 									})
 							}
 						}
+						if (mod.requires.modules) {
+							for (let m of mod.requires.modules) {
+								this._requires(m)
+									.then(() => {
+										waiter.update(m)
+									})
+							}
+						}
 					} else done()
-					// resolve()
 				})
 				.catch(err => {
+					this.modules.update(name, { state: 'failed' })
 					this.log(`Downloading ${name} module failed: ${err}`, 'error')
 					reject()
 				})
-
-
-			// var tag = document.createElement('script')
-			// tag.src = `packages/${name}.js`
-
-			// Config.packages.update(name, 'downloading')
-
-
-			// $(tag).ready(() => {
-			// 	Config.packages.update(name, 'downloaded')
-			// 	resolve()
-			// if (eval(`if(typeof ${name} != 'undefined')true;else false`)) {
-
-			// 	this.log(`${name} package downloaded`, 'ok')
-			// 	resolve()
-			// } else {
-			// 	Config.packages.update(name, 'failed')
-			// 	this.log(`${name} package download failed`, 'error')
-			// 	reject()
-			// }
-			// })
-			// $('head').append(tag)
 		});
 	}
 
-	// _getMultiPackage(...names){
-	// 	return new Promise((resolve, reject) => {
-	// 		var list = {}
-	// 		function update(name) {
-	// 			list[name] = true
-	// 			for (let el in list) {
-	// 				if (!el) return
-	// 			}
-	// 			console.log('resolve',)
-	// 			resolve()
-	// 		}
-	// 		for (let name of names) {
-	// 			list[name] = false
-	// 			this._getPackage(name)
-	// 				.then(()=>update(name))
-	// 		}
-	// 	})
-	// }
+	_getMultiPackage(...names) {
+		return new Promise((resolve, reject) => {
+			var waiter = new Waiter(names, () => {
+				resolve()
+			})
+			for (let name of names) {
+				this._getPackage(name)
+					.then(() => {
+						waiter.update(name)
+					})
+			}
+		})
+	}
 
 	_requires(name) {
-		if (!Config.packages[name])
-			Config.packages[name] = this._getPackage(name)
-
-		return Config.packages[name]
-		// return new Promise((resolve, reject) => {
-		// 	if (Config.packages.check(name) == 'undefined')
-		// 		this._getPackage(name)
-		// 	else resolve()
-
-		// 	Config.packages.callback(name)
-		// 		.then(() => {
-		// 			this[name] = eval(`new ${name}(this)`)
-		// 			resolve()
-		// 		})
-		// })
+		var mod = this.modules.info(name)
+		switch (mod.state) {
+			case 'installed': return new Promise((resolve, reject) => {
+				resolve(mod)
+			})
+			case 'downloading':
+			case 'installing': return this.modules.callback(name, 'installed')
+			case 'uninstalled': return this._getPackage(name)
+		}
 	}
 
 	_optional(name) {
-		this.log(`There is an optional module: ${name}, do you want to download it?`, 'prompt')
+		return new Promise((resolve, reject) => {
+			this.prompt(`There is an optional module: ${name}, do you want to download it? [y\\n]`)
+				.then(out => {
+					switch (out) {
+						default:
+						case 'N': case 'n':
+							reject()
+							break
+						case 'Y': case 'y':
+							this._requires(name)
+								.then(() => {
+									resolve()
+								})
+							break
+					}
+
+				})
+		})
+
 	}
 
 	_ready() {
-		$(this.elements.$wind).prop("id", this.id); // attach Con id to DOM
-		$(this.elements.$wind).data("con", this); // attach Con object to DOM
-
-		// command input key handling
-		this.elements.$commline.on("keydown", "input", function (e) {
-			var con = $(this).closest(".wind").data("con");
-
-			switch (e.which) {
-				// ENTER key
-				case 13: con.commandlineParse(); // commandline handling
-					break;
-
-				// KEYUP key
-				// KEYDOWN key
-				case 38:
-				case 40: con.commandHistory(e.which); e.preventDefault(); // last command down
-					break;
-
-				// ESCAPE key
-				case 27: con.elements.$commin.val("") // clear input
-					break;
-			}
-
-		});
-
-		// tree collapse subtree click handling
-		this.elements.$wind.on("click", ".collapse", function (e) {
-			var collapse = $(this);
-
-			collapse.parent().children("ul").slideToggle(200)
-			if (collapse.children("i").hasClass("icon-minus-squared")) {
-				collapse.children("i").removeClass();
-				collapse.children("i").addClass("icon-plus-squared");
-			} else {
-				collapse.children("i").removeClass();
-				collapse.children("i").addClass("icon-minus-squared");
-			}
-
-		})
+		$(this.elements.$wind).prop("id", this.id)
+		$(this.elements.$wind).data("con", this) // attach Con object to DOM
 
 		this.elements.$wind.on('keydown', e => {
 			var val = (e.altKey) * 1
@@ -1209,98 +1069,68 @@ class Con {
 
 		// })
 
-		// form key handling
-		this.elements.$commands.on("keydown", "form", function (e) {
-			var com = $(this).closest(".command").data("com");
+		// // form key handling
+		// this.elements.$commands.on("keydown", "form", function (e) {
+		// 	var com = $(this).closest(".command").data("com");
 
-			switch (e.which) {
-				case 13: com.sendForm(); // send form [enter]
-					break;
+		// 	switch (e.which) {
+		// 		case 13: com.sendForm(); // send form [enter]
+		// 			break;
 
-				case 27: com.removeForm(); // remove form [escape]
-					break;
-			}
-		});
+		// 		case 27: com.removeForm(); // remove form [escape]
+		// 			break;
+		// 	}
+		// });
 
-		// link click handling
-		this.elements.$wind.on("click", "a", function (e) {
-			var a = $(this);
-			var href = a.prop("href");
-			href = href.slice(href.indexOf("#"));
+		// window.addEventListener('popstate', ()=>{
+		// 	this.commandlineParse(location.hash.slice(1))
+		// });
 
-			if (href.startsWith("#")) {
-				e.preventDefault();
-				a.closest(".wind").data("con").executeCom(decodeURIComponent(href.slice(1)))
-			}
-		})
+		// // link click handling
+		// this.elements.$wind.on("click", "a", function (e) {
+		// 	var a = $(this);
+		// 	var href = a.prop("href");
+		// 	href = href.slice(href.indexOf("#"));
 
-		// jsonl file input event listener
-		this.elements.$jsonl[0].addEventListener('change', this.readJson, false);
+		// 	if (href.startsWith("#")) {
+		// 		e.preventDefault();
+		// 		a.closest(".wind").data("con").executeCom(decodeURIComponent(href.slice(1)))
+		// 	}
+		// })
 
 		// // 'accept cookies' prompt
-		// if (typeof getCookie("cookies") == "undefined") {
-		// 	setCookie("cookies", "1");
-		// 	this.log("This site uses cookies. By continuing, you agree to our use of cookies. <a target = '_blank' href='http://wikipedia.org/wiki/HTTP_cookie'>Learn more</a>", "warning")
+		// if (Storage.Cookie.get('cookies') == undefined) {
+		// 	Storage.Cookie.set('cookies', '1');
+		// 	this.log("This site uses cookies. By continuing, you agree to our use of cookies. <a target = '_blank' href='http://wikipedia.org/wiki/HTTP_cookie'>Learn more</a>", 'warning')
 		// }
 
 		// update input width // TODO: get this working in pure css
 		this.updateInputWidth();
 
+		this.settings = Storage.Local.get('settings') || {}
+
 		this.log("Console ready", 'ok')
 
-		this._requires("Socket")
-		this._requires("Essentials")
-		// this._requires("Tree")
+		this._getMultiPackage(...['Socket', 'Essentials'])
+
+		if(this.settings.bootPackages){
+			this._getMultiPackage(...this.settings.bootPackages)
+		}
 
 	}
 
 }
 
 var Config = {
-	notif: new Audio('res/unsure.mp3'), // notification sound object
-	treeDepth: 4, // tree visualization Depth
-	socket: undefined, // socket connection object
+	// notif: new Audio('res/unsure.mp3'), // notification sound object
 	cons: [], // cons list
-	packages: {},
-	// packages: {
-	// 	list: {},
-	// 	update(name, state) {
-	// 		if (this.list[name]) {
-	// 			this.list[name].state = state
-	// 		} else {
-	// 			this.list[name] = {
-	// 				state: state,
-	// 				callbacks: []
-	// 			}
-	// 		}
-
-	// 		if (state == 'ready') {
-	// 			for (let fs of this.list[name].callbacks) {
-	// 				fs[0]()
-	// 			}
-	// 		} else if (state == 'failed') {
-	// 			for (let fs of this.list[name].callbacks) {
-	// 				fs[1]()
-	// 			}
-	// 		}
-	// 	},
-	// 	callback(name, f) {
-	// 		return new Promise((resolve, reject) => {
-	// 			this.list[name].callbacks.push([resolve, reject])
-	// 		})
-	// 	},
-	// 	check(name) {
-	// 		return typeof this.list[name] != 'undefined' ? this.list[name].state : 'undefined'
-	// 	}
-	// },
-	verbose: 2,
 	serviceWorker: false // enable serviceWorker
 }
 
 $(document).ready(function () {
 	$("noscript").remove(); // remove 'js disabled' notice
 
-	Config.notif.volume = 0.3
+	// Config.notif.volume = 0.3
 	Config.cons.push(new Con())
 	con = Config.cons[0]
 
@@ -1312,22 +1142,30 @@ $(document).ready(function () {
 	}
 
 	setInterval(function () { // loading animation
+		function bar(bar) {
+			var max = 10,
+				a = '#',
+				b = ' '
+
+			if (typeof bar == 'string') {
+				bar = bar.split(a).length - 1
+				var percent = (bar / max) * 100
+				return percent
+			}
+			if (typeof bar == 'number') {
+				bar = Math.floor((bar * max) / 100)
+				return `[${a.repeat(bar)}${b.repeat(Math.abs(bar - max))}]`
+			}
+		}
 		if ($(".ud").length) $(".ud").each(function (index) { // for every Com
-			var c = $(this);
-			var s = c.attr('loading');
+			var c = $(this),
+				s = c.attr('loading'),
+				b = bar(s)
+
 			if (typeof s == "undefined") return; // return if Com is not loading
 
-			switch (s) {
-				case "[--------]": c.attr('loading', '[#-------]'); break;
-				case "[#-------]": c.attr('loading', '[##------]'); break;
-				case "[##------]": c.attr('loading', '[###-----]'); break;
-				case "[###-----]": c.attr('loading', '[####----]'); break;
-				case "[####----]": c.attr('loading', '[#####---]'); break;
-				case "[#####---]": c.attr('loading', '[######--]'); break;
-				case "[######--]": c.attr('loading', '[#######-]'); break;
-				case "[#######-]": c.attr('loading', '[########]'); break;
-				default: case "[########]": c.attr('loading', '[--------]'); break;
-			}
+			if (b >= 100) c.attr('loading', bar(0))
+			else c.attr('loading', bar(b + 10))
 
 		});
 
