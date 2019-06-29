@@ -921,6 +921,14 @@ io.on('connection', function (socket) {
 	db.addConnection(handle)
 	Functions.log({ action: "connect", handle: handle });
 
+	socket.emit('broadcast', {
+		type: 'log',
+		data: {
+			data: 'lol',
+			type: 'server'
+		}
+	})
+
 	socket.on('disconnect', function () {
 		db.removeConnection(handle)
 		Functions.log({ action: "disconnect", handle: handle });
@@ -968,6 +976,22 @@ io.on('connection', function (socket) {
 		}
 
 	});
+
+	socket.on('silent', function (data) {
+		function reply(rep) {
+			socket.emit('silent', {
+				rep: rep,
+				id: data.id
+			})
+		}
+		var actions = {
+			'size': () => {
+				reply('lol')
+			}
+		}
+		if (actions[data.query])
+			actions[data.query]()
+	})
 
 });
 

@@ -1,10 +1,10 @@
-@font-face {
+/* @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 400;
   src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(res/ubuntu-mono.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+} */
 
 :root{
 	--txblk: #1f1f1f;
@@ -24,19 +24,21 @@
 	--txxprp: #ff9dff;
 	--txxcya: #dcf4ff;
 	--txxwht: #ffffff;
+
+	--font: Courier New;
 }
 
 body{
 	height: 100vh;
 	font-size: 14px;
     margin: 0px;
-	font-family: Ubuntu Mono;
+	font-family: var(--font);
 }
 
 /* text inputs */
 input,textarea{
 	color: white;
-	font-family: Ubuntu Mono;
+	font-family: var(--font);
 	font-size: 14px;
 }
 
@@ -87,7 +89,6 @@ txprp, .txprp	{color: #AE00FF;} */
 	float: left;
 	padding: 0px 15px;
 	color: var(--txwht);
-	/* font-family: Ubuntu Mono; */
 	overflow-y: scroll;
 	overflow-x: hidden;
 	box-sizing: border-box;

@@ -10,6 +10,7 @@ module.exports = {
 	test: {
 		f: com => {
 			com.insert(['whatever', [1,2]], {flag: 1});
+			com.insert(['whatever', [1,3]], {flag: 1});
 			com.end();
 		},
 		desc: "block test",

@@ -27,6 +27,7 @@ var colors = {
 export default class Tree {
 	constructor(data) {
 		this.data = data
+		this.mdepth = 4
 
 		if (this._typeOf(data) != "array" && this._typeOf(data) != "object")
 			this.$ = $("<span></span>").append(this._contentType(data)).append(": ").append(`${data}`)
@@ -112,7 +113,7 @@ export default class Tree {
 
 	_recur(obj, depth) {
 
-		let m = this.mdepth || Config.treeDepth || 4
+		let m = this.mdepth || 4
 		const maxd = m <= 7 ? m : 7;	// max depth
 		const maxn = 50;	// max level length
 		const maxs = 150;	// max string length
