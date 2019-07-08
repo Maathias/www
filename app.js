@@ -31,7 +31,7 @@
 // 	console.log('loading')
 
 const dependencies = [
-	['Functions', './Functions.js'],
+	'chalk',
 	['conf', './conf.json'],
 	['data', './db.json'],
 	'express',
@@ -42,16 +42,16 @@ const dependencies = [
 	['cookieParser', 'cookie-parser'],
 	'http', 'https',
 	['socket', 'socket.io'],
-	'chalk',
 	'nodemailer',
 	'node-gzip'
 ]
 
-for(let dep of dependencies){
-	if(typeof dep == 'string') var name = value = dep
-	else if(dep instanceof Array) var name = dep[0], value = dep[1]
+for (let dep of dependencies) {
+	if (typeof dep == 'string') var name = value = dep
+	else if (dep instanceof Array) var name = dep[0], value = dep[1]
 	global[name] = require(value)
-	Functions.log({ action: 'info', data: `Loading '${name}' module` })
+	// console.log()
+	log({ action: 'info', data: `Loading '${name}' module` })
 }
 
 // other
@@ -190,7 +190,7 @@ class DataBase {
 							this.f(this.params)
 							this.exit(true)
 						} catch (error) {
-							Functions.log({ action: "info", data: "Event Error" }, 1)
+							log({ action: "info", data: "Event Error" }, 1)
 							this.exit(error)
 						}
 					}
@@ -200,7 +200,7 @@ class DataBase {
 
 			_check() {
 
-				Functions.log({ action: "info", data: "Checking Events" }, 3)
+				log({ action: "info", data: "Checking Events" }, 3)
 
 				var now = new Date()
 				var next = new Date()
@@ -208,7 +208,7 @@ class DataBase {
 				for (let e of this._list) {
 					if (!e.stats.done) {
 						if (e.time.getTime() <= now.getTime()) {
-							Functions.log({ action: "info", data: "Event Found" }, 2)
+							log({ action: "info", data: "Event Found" }, 2)
 							e.exec()
 						} else {
 							if ((e.time.getTime() < next.getTime()) || (next.getTime() == now.getTime())) {
@@ -221,7 +221,7 @@ class DataBase {
 				// for(let e of this._regular){
 				// 	if(!e.stats.done){
 				// 		if(e.time[e.time.when[0]]() - now[e.time.when[0]]()){
-				// 			Functions.log({action: "info", data: "Event Found"}, 2)
+				// 			log({action: "info", data: "Event Found"}, 2)
 				// 			e.exec()
 				// 		}else{
 				// 			console.log((e.time[e.time.when[0]]() - now[e.time.when[0]]()) *e.time.when[1])
@@ -234,7 +234,7 @@ class DataBase {
 
 				let n = next.getTime() - now.getTime()
 				if (n != 0) {
-					Functions.log({ action: "info", data: `Next event check in: ${n} ms` }, 3)
+					log({ action: "info", data: `Next event check in: ${n} ms` }, 3)
 					// clearTimeout(this.timeout)
 					this.timeout = setTimeout(function (s) { s._check() }, n, this)
 					return
@@ -271,7 +271,7 @@ class DataBase {
 
 	getDevices() {
 
-		Functions.log({
+		log({
 			action: "info",
 			data: "Updating device list"
 		}, 2)
@@ -286,7 +286,7 @@ class DataBase {
 				let m
 				var len = 0
 
-				Functions.log({
+				log({
 					action: "info",
 					data: "arp-scan done"
 				}, 3)
@@ -315,7 +315,7 @@ class DataBase {
 						mac: m[2],
 						desc: m[3],
 						name: name,
-						connected: Functions.date('long')
+						connected: dateFormat('long')
 					}
 				}
 
@@ -339,7 +339,7 @@ class DataBase {
 					if (!list[key]) { // goes offline
 
 						db.stats.offline[key] = db.stats.network[key];
-						db.stats.offline[key].disconnected = Functions.date('long')
+						db.stats.offline[key].disconnected = dateFormat('long')
 
 						delete db.stats.network[key]
 
@@ -356,7 +356,7 @@ class DataBase {
 				// for(let key in db.stats.network){
 				// 	if(!db.stats.offline[key]){
 				// 		db.stats.offline[key] = db.stats.network[key];
-				// 		db.stats.offline[key].date = Functions.date()
+				// 		db.stats.offline[key].date = date()
 				// 	}
 				//
 				// }
@@ -367,7 +367,7 @@ class DataBase {
 				// 	}
 				// }
 
-				Functions.log({
+				log({
 					action: "info",
 					data: `arp-scan -> ${len} devices online`
 				}, 3)
@@ -379,15 +379,15 @@ class DataBase {
 
 	addAccount(data) {
 
-		Functions.log({
+		log({
 			action: "info",
 			data: "Creating user account"
 		}, 2);
 
 		var id = (function (len, users) {
-			var id = Functions.ID(len);
+			var id = ID(len);
 			while (users[id]) {
-				id = Functions.ID(len);
+				id = ID(len);
 			}
 			return id
 		})(6, this.data.users)
@@ -403,7 +403,7 @@ class DataBase {
 
 	saveData() {
 
-		Functions.log({
+		log({
 			action: "info",
 			data: "Saving database file"
 		}, 1);
@@ -413,7 +413,7 @@ class DataBase {
 				console.log(err);
 				return err;
 			} else {
-				Functions.log({
+				log({
 					action: "info",
 					data: "Database saved"
 				}, 2);
@@ -494,9 +494,9 @@ class DataBase {
 
 	emitToGroup(e, data, group, direction) {
 
-		var direction = Functions.isDefined(direction, "only")
+		var direction = isDefined(direction, "only")
 
-		Functions.log({
+		log({
 			action: "info",
 			data: `Emit to group ${group} ${direction}`
 		}, 3);
@@ -520,16 +520,16 @@ class DataBase {
 
 }
 
-class Connection{
-	constructor(obj){
-		var {req, res, socket, cred} = obj
-		if(obj.req){
+class Connection {
+	constructor(obj) {
+		var { req, res, socket, cred } = obj
+		if (obj.req) {
 
-			if(req.headers['x-forwarded-for'])
+			if (req.headers['x-forwarded-for'])
 				this.ip = req.headers['x-forwarded-for']
 			else
 				this.ip = req.ip
-			this.shortid = Functions.ID(6)
+			this.shortid = ID(6)
 			this.method = req.method
 			this.status = res.statusCode
 			this.path = req.path
@@ -538,14 +538,14 @@ class Connection{
 
 			this.req = obj.req
 
-		}else if(obj.socket){
+		} else if (obj.socket) {
 
 			if (socket.handshake.headers['x-forwarded-for'])
 				this.ip = socket.handshake.headers['x-forwarded-for']
 			else
 				this.ip = socket.handshake.address
 
-			this.shortid = Functions.ID(6)
+			this.shortid = ID(6)
 			this.secure = socket.handshake.secure
 			this.hostname = socket.handshake.headers.host
 
@@ -559,7 +559,7 @@ class Connection{
 
 			this.authStat = 1
 
-		}else throw new Error("Unknown connection type")
+		} else throw new Error("Unknown connection type")
 	}
 
 	get userInfo() {
@@ -572,10 +572,10 @@ class Connection{
 		}
 	}
 
-	auth(cred){
-		if(cred){
-			if(cred.token && cred.user){
-				if (db.data.tokens[cred.user]){
+	auth(cred) {
+		if (cred) {
+			if (cred.token && cred.user) {
+				if (db.data.tokens[cred.user]) {
 					var n = db.data.tokens[cred.user].indexOf(cred.token)
 					if (n != -1) {
 						var user = db.data.users[cred.user]
@@ -602,7 +602,7 @@ class Connection{
 						this.authStat = 2
 						return 2
 					}
-				}else{
+				} else {
 					this.authStat = 3
 					return 3
 				}
@@ -627,18 +627,18 @@ class Com {
 		}
 	}
 
-	addTime(){}
+	addTime() { }
 
 	Block(data, meta) {
-		var data = Functions.isDefined(data, {}),
-			meta = Functions.isDefined(meta, {})
+		var data = isDefined(data, {}),
+			meta = isDefined(meta, {})
 		return {
-			id: Functions.ID(6),
+			id: ID(6),
 			sent: false,
 			data: data,
 			meta: meta,
 		}
-		
+
 	}
 
 	insert(data, meta) {
@@ -676,6 +676,210 @@ class Com {
 	}
 }
 
+function ID(n) {
+	/**
+	 * thiserate random base64 string identificator.
+	 * @param n number of charaters in string.
+	 * 
+	 * @returns {string} generatred string
+	 */
+
+	var out = ""
+	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+
+	for (var i = 0; i < n; i++)
+		out += chars.charAt(Math.floor(Math.random() * chars.length))
+
+	return out;
+}
+
+function dateFormat(format) {
+	/**
+	 * thiserates current date in specified format
+	 * long - DD/MM/YYYY HH:MM:SS
+	 * log - DD/MMM HH:MM:SS
+	 * tiny - MM:SS,SSS
+	 * @param {string} format date format 
+	 * 
+	 * @returns {string} date in specified format
+	 */
+
+	var d = new Date,
+		out = new String,
+		h = d.getHours() < 10 ? "0" + d.getHours() : d.getHours(),
+		m = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes(),
+		s = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds(),
+		ms = (function () {
+			let ms = d.getMilliseconds()
+			return ms < 10 ? '00' + ms : (ms < 100 ? '0' + ms : ms)
+		})()
+
+	switch (format) {
+		default:
+		case 'long':
+			return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + d.getHours() + ":" + m + ":" + s
+		case 'log':
+			return `${d.getDate()}/${d.getMonth()} ${h}:${m}:${s}:${ms}`
+		case 'tiny':
+			return `${h}:${m}:${s}.${ms}`
+	}
+
+	return out
+}
+
+function escape() {
+	return unsafe
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
+}
+
+function multiLine(...arr) {
+	var out = "";
+	for (let key of arr) {
+		out += key.join("\n");
+	}
+	return out;
+}
+
+function hrtimeToMs(hrtime) {
+	return hrtime[0] * 1e3 + hrtime[1] / 1e6
+}
+
+function email(email) {
+	var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(String(email).toLowerCase());
+}
+
+function isDefined(...d) {
+
+	for (let key in d) {
+		if (typeof d[key] != "undefined")
+			return d[key]
+	}
+	return undefined
+}
+
+function isNotNull(v, d) {
+	if (v == null)
+		return d
+	else
+		return v
+}
+
+function find(key, value, array) {
+	for (let index in array) {
+		if (typeof array[index] == 'object') return Che.find(key, value, array[index])
+		if (array[index][key] == value) return array[index]
+	}
+	return undefined
+}
+
+function log(data, lvl) { // log user information //user, session, action, data, ip
+
+	var lvl = lvl || 1,
+		verbose = typeof db != 'undefined' ? (typeof db.config != 'undefined' ? db.config.verbose : Infinity) : Infinity
+
+	if (lvl > verbose) return
+
+	var date = chalk.gray(dateFormat('log')) + ` ${"#".repeat(lvl)}`,
+		actions = {
+			'connect': () => console.log(`${date} CONNECTED        ${chalk.gray(`${data.handle.ip} ${data.handle.shortid}`)}`),
+			'disconnect': () => console.log(`${date} DISCONNECTED     ${chalk.gray(`${data.handle.ip} ${data.handle.shortid} ${data.handle.login}`)}`),
+			'auth': () => console.log(`${date} AUTH ${
+				data.handle.authStat === 0 ? 'OK         ' : (
+					data.handle.authStat === 1 ? 'ERR        ' : (
+						data.handle.authStat === 2 ? 'FAILED     ' : '[]'
+					))
+				} ${chalk.gray(`${data.handle.ip} ${data.handle.shortid} ${data.handle.login}`)}`),
+			'command': () => console.log(`${date} ${data.com.req.com} ${
+				data.stat === 0 ? '           ' : (
+					data.stat === 1 ? 'ERR        ' : (
+						data.stat === 2 ? 'FAILED     ' : '[]'
+					))
+				} ${chalk.gray(`${data.handle.ip} ${data.handle.shortid} ${data.handle.login}`)}`)
+			,
+			// 'denied':	() => console.log(`${date} ${chalk.magenta(data.udata.login + " " + data.udata.shortid + " !>! " + data.data.c + " " + data.data.arg)}`),
+			'login': () => console.log(`${date} ${data.udata.login} ${data.udata.shortid} <-< [${data.data.arg[0]}]`),
+			'logout': () => console.log(`${date} ${data.udata.login} ${data.udata.shortid} >-> [guest]`),
+			// 'unknown':	() => console.log(`${date} ${chalk.yellow(`${data.udata.login} ${data.udata.shortid} ?>? ${data.data.c} ${data.data.arg}`)}`),
+			'err': () => console.log(`${date} err -!- ${data.data}`),
+			'info': () => console.log(`${date} ${chalk.cyan(data.data)}`),
+			'req': () => {
+				let status = data.handle.status
+				switch (parseInt(status.toString()[0])) {
+					case 1: status = chalk.cyan(status); break;
+					case 2: status = chalk.green(status); break;
+					case 3: status = chalk.yellow(status); break;
+					case 4: status = chalk.magenta(status); break;
+					case 5: status = chalk.red(status); break;
+				}
+				console.log(`${date} ${data.handle.method} ${status} ${data.handle.path} ${data.handle.ip}`);
+			}
+
+		},
+		templates = {
+			connect: "CONNECTED $1 $2",
+			disconnect: "DISCONNECTED $1 $2 $3",
+			auth: "AUTH $5 ",
+			command: "$6 $5 $1 $2 $3",
+			login: "",
+			logout: "",
+			err: "",
+			info: "$0",
+			req: ""
+		}
+
+	if (templates[data.action]) {
+		console.log((function (template) {
+			for (let i = 0; i <= 6; i++) {
+				// console.log(template.indexOf(`\$${i}`))
+				if (template.indexOf(`\$${i}`) != -1) {
+					template = template.replace(`\$${i}`, (function () {
+						switch (i) {
+							case 0: return chalk.cyan(data.data)
+							case 1: return chalk.gray(data.handle.ip)
+							case 2: return chalk.gray(data.handle.shortid)
+							case 3: return chalk.gray(data.handle.login)
+							case 4: return data.handle.authStat === 0 ? 'OK' : (data.handle.authStat === 1 ? 'ERR' : (data.handle.authStat === 2 ? 'FAILED' : '?'))
+							case 5: return data.stat === 0 ? '' : (data.stat === 1 ? '?' : (data.stat === 2 ? 'ERR' : '?'))
+							case 6: return data.com.req.com
+						}
+					})())
+				}
+			}
+			return `${date} ${template}`
+		})(templates[data.action]))
+	}
+
+	// if (actions[data.action]) {
+	// 	actions[data.action]()
+	// } else {
+	// 	console.log(data)
+	// }
+
+}
+
+function blink() { // blink the status led
+	// cmd.run('python /home/mathias/python/blink.py');
+}
+
+function getUptime() {
+
+	var uptime = cmd.get("uptime -p", function (err, data, stderr) {
+		if (err) {
+			throw err
+		} else if (stderr) {
+			throw stderr
+		} else if (data) {
+			db.stats.uptime = data
+		}
+	})
+
+}
+
 // function save(file, data) { // save data to file
 // 	fs.writeFile(file, data, function (err) {
 // 		if (err) {
@@ -696,12 +900,12 @@ class Com {
 // 			if (key != "type") db.stats[key] = obj[key]
 // 		}
 
-// 		Functions.log({
+// 		log({
 // 			action: "data",
 // 			data: "Data recieved succesfully. " + "[Length: " + l + "]"
 // 		});
 // 	} catch (e) {
-// 		Functions.log({
+// 		log({
 // 			action: "err",
 // 			data: "Invalid JSON string recieved. " + "[Length: " + l + "]"
 // 		});
@@ -717,14 +921,14 @@ class Com {
 // 	}
 
 // 	// emto(obj, to)
-// 	Functions.blink();
+// 	blink();
 // }
 
 // function gpath(dir, arg) { // get path
 
 // 	var path = [];
 
-// 	Functions.isDefined(arg, "");	// if no user argument replace with empty
+// 	isDefined(arg, "");	// if no user argument replace with empty
 
 // 	if (arg.startsWith("\/")) { // if arg is absolute, dont merge
 // 		path = arg.slice(1).split("\/");
@@ -847,9 +1051,9 @@ app
 	.use(express.static(path.join(__dirname, 'public')))
 
 	.use(function (req, res, next) {
-		var handle = new Connection({req: req, res: res})
+		var handle = new Connection({ req: req, res: res })
 		res.on("finish", function () {
-			Functions.log({
+			log({
 				action: "req",
 				req: req,
 				res: res,
@@ -858,7 +1062,7 @@ app
 		});
 		next()
 	})
-	// .use((err, req, res, next) => res.status(404).render('pages/404.ejs'))
+// .use((err, req, res, next) => res.status(404).render('pages/404.ejs'))
 
 // server setup
 
@@ -885,7 +1089,7 @@ global.db = new DataBase(data);
 
 db.onReady = function () {
 
-	Functions.log({
+	log({
 		action: "info",
 		data: "DataBase ready"
 	}, 1);
@@ -900,7 +1104,7 @@ db.onReady = function () {
 
 // http standard server
 httpServer.listen(conf.ports.main, function () {
-	Functions.log({
+	log({
 		action: "info",
 		data: `Server listening on port ${conf.ports.main}`
 	}, 1);
@@ -908,7 +1112,7 @@ httpServer.listen(conf.ports.main, function () {
 
 // https secure server
 if (conf.cert.enable) httpsServer.listen(conf.ports.ssl, function () {
-	Functions.log({
+	log({
 		action: "info",
 		data: `Server listening on port ${conf.ports.ssl}`
 	}, 1);
@@ -917,9 +1121,9 @@ if (conf.cert.enable) httpsServer.listen(conf.ports.ssl, function () {
 // socketio events
 io.on('connection', function (socket) {
 
-	var handle = new Connection({socket: socket})
+	var handle = new Connection({ socket: socket })
 	db.addConnection(handle)
-	Functions.log({ action: "connect", handle: handle });
+	log({ action: "connect", handle: handle });
 
 	socket.emit('broadcast', {
 		type: 'log',
@@ -931,13 +1135,13 @@ io.on('connection', function (socket) {
 
 	socket.on('disconnect', function () {
 		db.removeConnection(handle)
-		Functions.log({ action: "disconnect", handle: handle });
+		log({ action: "disconnect", handle: handle });
 	});
 
 	socket.on('auth', function (data) { // user authorization request
 		handle.auth(data)
 		socket.emit("auth", handle.userInfo)
-		Functions.log({ action: "auth", handle: handle });
+		log({ action: "auth", handle: handle });
 	});
 
 	socket.on('com', function (data) { // user command request
@@ -951,14 +1155,14 @@ io.on('connection', function (socket) {
 		}
 
 		if (db.commands[com.req.com]) {
-			
+
 			if (db.checkPermissions(com.req, handle)) {
 
-				Functions.log({ action: "command", handle: handle, com: com, stat: 0 })
+				log({ action: "command", handle: handle, com: com, stat: 0 })
 				db.commands[com.req.com].f(com, db)
 
 			} else {
-				Functions.log({ action: "command", handle: handle, com: com, stat: 2 })
+				log({ action: "command", handle: handle, com: com, stat: 2 })
 				com.insert(com.req.com + ": Permission denied", {
 					flag: 6,
 					arg: "error"
@@ -966,13 +1170,13 @@ io.on('connection', function (socket) {
 			}
 
 		} else {
-			Functions.log({ action: "command", handle: handle, com: com, stat: 1 })
+			log({ action: "command", handle: handle, com: com, stat: 1 })
 			com.insert({
 				data: com.req.com + ": Command not found"
 			}, {
-				flag: 6,
-				arg: "error"
-			}).end()
+					flag: 6,
+					arg: "error"
+				}).end()
 		}
 
 	});
