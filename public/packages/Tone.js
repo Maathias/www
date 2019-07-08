@@ -4,7 +4,7 @@ export var commands = {
 	'tone': com => {
 		var actions = {
 			'play': () => {
-				com.con.Tone.play(...com.arg.slice(1,4))
+				com.con.Tone.play(...com.arg.slice(1,5))
 				com._end()
 			}
 		}
@@ -20,7 +20,13 @@ export default class Tone{
 		this.isPlaying = false;
 	}
 
-	play(freq, gain, time) {
+	destructor(){
+		this.stop()
+		delete this.oscillator
+		delete this.isPlaying
+	}
+
+	play(freq, gain, pan, time) {
 
 		//stop the oscillator if it's already playing
 		if (this.isPlaying) {
@@ -36,18 +42,30 @@ export default class Tone{
 		volume.gain.value = gain;
 		volume.connect(context.destination);
 
+		// span node
+		var panNode = context.createStereoPanner();
+		panNode.pan.setValueAtTime(pan, context.currentTime);
+
+		panNode.connect(volume);
+
 		//connect the oscillator to the nodes
 		var oscillator = this.oscillator = context.createOscillator();
 		oscillator.type = 'sine';
 		oscillator.frequency.value = freq;
-		oscillator.connect(volume);
+		oscillator.connect(panNode);
 
 		//start playing
 		oscillator.start();
 		this.isPlaying = true;
+		console.log(`Playing ${freq}Hz at ${gain}dB, ${pan} center, for ${time}ms`)
 
 		setTimeout(()=>{
 			oscillator.stop();
 		}, time)
+	}
+
+	stop() {
+		if (this.oscillator)
+			this.oscillator.stop()
 	}
 }
