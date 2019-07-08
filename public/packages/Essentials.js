@@ -1,7 +1,7 @@
 export var type = "command"
 
 export default {
-	'settings': com =>{
+	'settings': com => {
 		var actions = {
 			'set': () => {
 				com.con.settings[com.arg[1]] = eval(com.arg[2])
@@ -13,11 +13,33 @@ export default {
 	},
 	'mod': com => {
 		var actions = {
-			'get': ()=>{
-				com.con.prompt(`Install ${com.arg[1]} module? [y\\n]`)
-					.then(()=>{
-						com.con._requires(com.arg[1])
-							.then(()=>com._end())
+			'get': () => {
+				com.con.prompt(`Install ${com.arg[1]} module?`, 'yn')
+					.then(out => {
+						if(out){
+							com.con._requires(com.arg[1])
+								.then(() => com._end())
+						} else {
+							com.con.log(`Aborting ${com.arg[1]} installation`, 'warning')
+							com._end()
+						}
+					})
+					.catch(out => {
+						actions.get()
+					})
+			},
+			'update': () => {
+				com.con.prompt(`Update ${com.arg[1]} module?`, 'yn')
+					.then(() => {
+						com.con._update(com.arg[1])
+							.then(() => {
+								com.con.log(`Module ${com.arg[1]} updated succesfully`, 'ok')
+								com._end()
+							})
+							.catch(() => {
+								com.con.log(`Module ${com.arg[1]} update failed`, 'error')
+								com._end()
+							})
 					})
 			}
 		}
