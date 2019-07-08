@@ -312,7 +312,7 @@ class Com {
 		} else { // send command to server
 			this.log("Local command not found", 'warning', 2)
 			if (this.con.Socket) { // check for module
-				if (this.con.Socket.socket.connected) { // check for connection
+				if (this.con.Socket.connected) { // check for connection
 					this.con.Socket.comSend(this)
 				} else {
 					this.log("Server disconnected", 'error')
@@ -328,7 +328,7 @@ class Com {
 
 		switch (this.c) {
 			default:
-				if (this.con.Socket.socket.connected != true) {
+				if (this.con.Socket.connected != true) {
 					this.log("socket disconnected", "error");
 					this.insertResponse();
 					return 1;
@@ -1035,7 +1035,6 @@ class Con {
 								})
 							break
 					}
-
 				})
 		})
 
@@ -1045,7 +1044,7 @@ class Con {
 		$(this.elements.$wind).prop("id", this.id)
 		$(this.elements.$wind).data("con", this) // attach Con object to DOM
 
-		this.elements.$wind.on('keydown', e => {
+		$(document).on('keydown', e => {
 			var val = (e.altKey) * 1
 				+ (e.ctrlKey) * 2
 				+ (e.metaKey) * 3
