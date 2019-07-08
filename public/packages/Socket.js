@@ -72,6 +72,14 @@ export default class Socket {
 		});
 	}
 
+	destructor(){
+		this.socket.close()
+	}
+
+	get connected(){
+		return this.socket.connected
+	}
+
 	// motd() {
 	// 	if (this.con.first) return
 	// 	this.con.first = true
