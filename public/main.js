@@ -626,6 +626,7 @@ class Con {
 			push(com) {
 				this.commands.splice(1, 0, com)
 				this.counter = 0
+				Storage.Session.set('history', this.commands)
 				return this
 			},
 
@@ -1108,6 +1109,7 @@ class Con {
 		this.updateInputWidth();
 
 		this.settings = Storage.Local.get('settings') || {}
+		this.history.commands = Storage.Session.get('history') || [""]
 
 		this.log("Console ready", 'ok')
 
