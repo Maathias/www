@@ -833,12 +833,27 @@ class Con {
 
 	}
 
-	prompt(prompt) {
+	prompt(prompt, type) {
 		return new Promise((resolve, reject) => {
-			this.log(prompt, 'prompt')
+			var types = {
+				'yn': 'y\\n',
+				'number': 'number'
+			}
+			
+			this.log(prompt + ` [${types[type] || '-'}]`, 'prompt')
 			this.hijack()
 				.then(out => {
-					resolve(out)
+					switch(type){
+						default: resolve(out); break;
+						case 'yn':
+							switch(out){
+								case 'y': case 'Y': case 'yes': case 'Yes':
+									resolve(true); break;
+								case 'n': case 'N': case 'no': case 'No':
+									resolve(false); break;
+								default: reject(out); break;
+							}
+					}
 				})
 		})
 	}
@@ -1007,6 +1022,25 @@ class Con {
 		})
 	}
 
+	_update(name) {
+		return new Promise((resolve, reject) => {
+			var info = this.modules.info(name)
+			if (info.state == 'installed') {
+				if (info.type == 'sub') {
+					this.log(`Destructuring ${name} module`, 'warning')
+					this[name].destructor()
+					delete this[name]
+				}
+				this._getPackage(name)
+					.then(() => resolve())
+					.catch(() => reject())
+			} else {
+				this.log(`Module ${name} is not installed`, 'error')
+				reject()
+			}
+		})
+	}
+
 	_requires(name) {
 		var mod = this.modules.info(name)
 		switch (mod.state) {
@@ -1021,19 +1055,15 @@ class Con {
 
 	_optional(name) {
 		return new Promise((resolve, reject) => {
-			this.prompt(`There is an optional module: ${name}, do you want to download it? [y\\n]`)
+			this.prompt(`There is an optional module: ${name}, do you want to download it?`, 'yn')
 				.then(out => {
-					switch (out) {
-						default:
-						case 'N': case 'n':
-							reject()
-							break
-						case 'Y': case 'y':
-							this._requires(name)
-								.then(() => {
-									resolve()
-								})
-							break
+					if(out){
+						this._requires(name)
+							.then(() => {
+								resolve()
+							})
+					} else {
+						reject()
 					}
 				})
 		})
