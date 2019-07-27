@@ -158,6 +158,11 @@ function requiresStyle(url) {
 
 }
 
+function toKB(bytes) {
+	let precision = 1e4
+	return Math.floor((bytes / 1000)*precision)/precision
+}
+
 class Storage {
 	static get Local() {
 		return {
