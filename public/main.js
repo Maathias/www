@@ -868,22 +868,38 @@ class Con {
 		return new Promise((resolve, reject) => {
 			var types = {
 				'yn': 'y\\n',
+				'yn!': 'y\\n',
 				'number': 'number'
 			}
 			
-			this.log(prompt + ` [${types[type] || '-'}]`, 'prompt')
-			this.hijack()
+			var log = this.log(prompt + ` [${types[type] || '-'}] `, 'prompt'),
+				con = this instanceof Con ? this : this.con
+
+			con.hijack()
 				.then(out => {
+					log.append(out)
 					switch(type){
 						default: resolve(out); break;
 						case 'yn':
+							out = out.toLowerCase()
 							switch(out){
-								case 'y': case 'Y': case 'yes': case 'Yes':
+								case 'y': case 'yes':
+									resolve(true); break;
+								case 'n': case 'N': case 'no': case 'No':
+									resolve(false); break;
+								default: resolve(true); break;
+							}
+							break;
+						case 'yn!':
+							out = out.toLowerCase()
+							switch (out) {
+								case 'y': case 'yes':
 									resolve(true); break;
 								case 'n': case 'N': case 'no': case 'No':
 									resolve(false); break;
 								default: reject(out); break;
 							}
+							break;
 					}
 				})
 		})
