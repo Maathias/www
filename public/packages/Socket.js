@@ -1,6 +1,6 @@
 export var type = "sub"
 export var requires = {
-	scripts: ["socket.io/socket.io.js"]
+	scripts: ["res/socket.io.js"]
 }
 
 class Request {
@@ -24,7 +24,7 @@ export var commands = {
 				} else {
 					com.log(`Socket already connected`, 'error')
 				}
-				
+				com._end()
 			},
 			'disconnect': () => {
 				if (com.con.Socket.socket.connected){
@@ -33,7 +33,7 @@ export var commands = {
 				} else {
 					com.log(`Socket not connected`, 'error')
 				}
-				
+				com._end()
 			}
 		}
 		actions[com.arg[0]]()
@@ -45,7 +45,9 @@ export default class Socket {
 	constructor(con) {
 		this.con = con
 		this.hostname = '/'
-		this.socket = io(`${this.hostname}`)
+		this.socket = io(`${this.hostname}`, {
+			autoConnect: false
+		})
 
 		this.waiting = {}
 
@@ -72,6 +74,10 @@ export default class Socket {
 		});
 	}
 
+	init(){
+		this.socket.open()
+	}
+
 	destructor(){
 		this.socket.close()
 	}
@@ -90,10 +96,11 @@ export default class Socket {
 	// 	}
 	// }
 
-	reqSend(data){
+	reqSend(query, data){
 		return new Promise((resolve, reject) => {
 			var out = {
-				query: data,
+				query: query,
+				data: data,
 				id: makeID(5)
 			}
 			this.waiting[out.id] = {resolve: resolve, reject: reject}

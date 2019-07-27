@@ -26,7 +26,7 @@ export default class Tone{
 		delete this.isPlaying
 	}
 
-	play(freq, gain, pan, time) {
+	play(freq = 0, gain = 0.5, pan = 0, time = 100) {
 
 		//stop the oscillator if it's already playing
 		if (this.isPlaying) {
