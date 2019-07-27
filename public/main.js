@@ -137,7 +137,7 @@ function newScript(url) {
 		script.onerror = function (message) {
 			reject(message)
 		};
-		script.src = location.href + url;
+		script.src = url;
 		document.head.appendChild(script); //or something of the likes
 	})
 
@@ -258,6 +258,7 @@ class Com {
 		this.blocks = []
 
 		this.__proto__.log = this.con.log
+		this.__proto__.prompt = this.con.prompt
 
 		// con.onload = function(){
 		this._init()
@@ -418,7 +419,7 @@ class Com {
 			return
 		}
 
-		this.con.log(`#${res.res.id} received block`, "info", 3);
+		this.log(`#${res.res.id} received block`, "info", 3);
 		this.blocks[res.meta.n] = res
 		this._timeout(true)
 
@@ -574,6 +575,7 @@ class Con {
 
 		this.id = makeID(6) // Con ID
 		this.elements = {}
+		this.con = this
 
 		this.elements.$wind = $("<div></div>")
 			.addClass("wind")
@@ -836,6 +838,8 @@ class Con {
 			this.$elem.append(out)
 		}
 
+		return out
+
 	}
 
 	prompt(prompt, type) {
@@ -947,7 +951,8 @@ class Con {
 								try {
 									this[name] = new mod.default(this)
 								} catch (err) {
-									this.log(`Module ${name} failed: ${err}`, 'error')
+									this.log(`Module ${name} installation failed: ${err}`, 'error')
+									reject()
 									return
 								}
 								break;
