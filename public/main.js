@@ -712,7 +712,29 @@ class Con {
 			}
 		}
 
-		this.settings = {}
+		this.settings = {
+			list: (function(){
+				let defaults = {
+					logModuleNames: false,
+					verbose: 5
+				}
+
+				return defaults = { ...defaults, ...Storage.Local.get('settings') || {}}
+				
+			})(),
+			update: function(obj){
+				for(let setting in obj) this.set(setting, obj[setting])
+			},
+			get: function(key){
+				if(key === undefined) return this.list
+				return this.list[key]
+			},
+			set: function(key, value){
+				this.list[key] = value
+				Storage.Local.set('settings', this.list)
+				return value
+			}
+		}
 
 		this.Functions = {};
 		this.Classes = {};
@@ -721,7 +743,7 @@ class Con {
 		this.scroll = true; // block scrollBottom flag
 		this.timeout = 16000 // Com response waiting time [ms]
 		this.first = false
-		this.verbose = 2; // log display level
+		// this.verbose = 2; // log display level
 
 		// credentials
 		this.credentials = Storage.Local.get('credentials')
@@ -785,7 +807,7 @@ class Con {
 
 		var lvl = isDefined(lvl, 1);
 
-		if (lvl > this.verbose) return
+		if (lvl > this.con.settings.get('verbose')) return
 
 		var opt = isDefined(opt, "");
 
@@ -811,7 +833,7 @@ class Con {
 				timestamp(),
 				$('<tx></tx>')
 					.addClass(`tx${opt[0]}`)
-					.append("#".repeat(lvl))
+					.append((this.con.settings.get('logModuleName')?`${source} `:'') + "#".repeat(lvl))
 					.append(` ${opt[1]}: `)
 			)
 			.append(data)
@@ -1147,16 +1169,20 @@ class Con {
 		// update input width // TODO: get this working in pure css
 		this.updateInputWidth();
 
-		this.settings = Storage.Local.get('settings') || {}
 		this.history.commands = Storage.Session.get('history') || [""]
 
 		this.log("Console ready", 'ok')
 
-		this._getMultiPackage(...['Socket', 'Essentials'])
+		var extra = this.settings.get('bootPackages') ? this.settings.get('bootPackages') : []
 
-		if(this.settings.bootPackages){
-			this._getMultiPackage(...this.settings.bootPackages)
-		}
+		this._getMultiPackage(...['Socket', 'Core'], ...extra)
+			.then(() => {
+				this.Socket.init()
+			})
+
+		// if(this.settings.bootPackages){
+		// 	this._getMultiPackage(...this.settings.bootPackages)
+		// }
 
 	}
 
