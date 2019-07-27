@@ -1,14 +1,27 @@
-function toGraph(data, x, y) {
-	/**
-	 * Create chart.js graph
-	 * @param {object} data chart.js configuration object
-	 * @param {number} x graph width
-	 * @param {number} y grap height
-	 * 
-	 * @returns {H} chart.js html element with init script
-	 */
+export var type = 'class'
 
-	var id = makeID(6);
+export var requires ={
+	scripts: [
+		'res/chart.min.js'
+	]
+}
 
-	return `<div class="chartdiv"><canvas id="${id}" width="${isDefined(x, 400)}" height="${isDefined(y, 400)}"></canvas></div><script>var ctx = document.getElementById("${id}").getContext("2d");var myChart = new Chart(ctx, JSON.parse('${JSON.stringify(data)}'));</script>`
+export default class Graph{
+	constructor(config, data){
+		this.id = makeID(4)
+		this.x = 400
+		this.y = 400
+		this.$ = $('<div></div>')
+			.addClass('chart')
+			.attr('width', this.x)
+			.attr('height', this.y)
+			.append(
+				this.canvas = $('<canvas></canvas>')
+					.attr('id', this.id)
+			)
+		this.obj = new Chart(this.canvas[0].getContext('2d'), {
+			...config,
+			data: data
+		})
+	}
 }
