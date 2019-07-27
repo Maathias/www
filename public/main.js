@@ -1085,19 +1085,42 @@ class Con {
 		}
 	}
 
+	_modInfo(name) {
+		return new Promise((resolve, reject) => {
+			this.log(`Getting ${name} module stats`, 'info', 2)
+			this.Socket.reqSend('size', `${name}.js`)
+				.then(info => {
+					var local = this.modules.info(name)
+					resolve({
+						size: info.rep,
+						type: local.type,
+						state: local.state
+					})
+				})
+		})
+	}
+
 	_optional(name) {
 		return new Promise((resolve, reject) => {
-			this.prompt(`There is an optional module: ${name}, do you want to download it?`, 'yn')
-				.then(out => {
-					if(out){
-						this._requires(name)
-							.then(() => {
-								resolve()
-							})
-					} else {
-						reject()
-					}
+			this._modInfo(name)
+				.then(info => {
+					this.log(`${name}: type: ${info.type}`)
+					this.log(`${name}: status: ${info.state}`)
+					this.log(`${name}: size: ${toKB(info.size)} kB`)
+
+					this.prompt(`Do you want to install ${name}?`, 'yn')
+						.then(out => {
+							if (out) {
+								this._requires(name)
+									.then(() => {
+										resolve()
+									})
+							} else {
+								reject()
+							}
+						})
 				})
+			
 		})
 
 	}
